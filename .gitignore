@@ -25,7 +25,9 @@ __pycache__/
 *.mp3
 *.aiff
 
-# Salidas temporales
+# Salidas temporales y distribuciones
 tmp/
 temp/
 logs/
+dist/
+*.zip

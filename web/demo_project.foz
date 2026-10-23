@@ -1,0 +1,77 @@
+{
+  "format": "foz-soundpro-project",
+  "version": "1.0.0",
+  "id": "foz_demo_001",
+  "name": "Demo Trap Banger",
+  "bpm": 140,
+  "swing": 0.05,
+  "stepsCount": 16,
+  "masterVolume": 0.85,
+  "createdAt": "2026-10-23T20:00:00.000Z",
+  "updatedAt": "2026-10-23T20:00:00.000Z",
+  "tracks": [
+    {
+      "id": "kick",
+      "name": "Bombo (Kick 808)",
+      "muted": false,
+      "solo": false,
+      "volume": 0.95,
+      "steps": [true, false, false, false, false, false, false, false, true, false, false, false, false, false, true, false],
+      "velocities": [1.0, 0, 0, 0, 0, 0, 0, 0, 0.95, 0, 0, 0, 0, 0, 0.9, 0]
+    },
+    {
+      "id": "snare",
+      "name": "Caja (Snare)",
+      "muted": false,
+      "solo": false,
+      "volume": 0.9,
+      "steps": [false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false],
+      "velocities": [0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "clap",
+      "name": "Palmas (Clap)",
+      "muted": false,
+      "solo": false,
+      "volume": 0.85,
+      "steps": [false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false],
+      "velocities": [0, 0, 0, 0, 0, 0, 0, 0, 1.0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "hihat_closed",
+      "name": "Hi-Hat Cerrado",
+      "muted": false,
+      "solo": false,
+      "volume": 0.8,
+      "steps": [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+      "velocities": [0.95, 0.65, 0.85, 0.65, 0.9, 0.7, 0.85, 0.95, 0.95, 0.65, 0.85, 0.65, 0.9, 0.7, 0.85, 1.0]
+    },
+    {
+      "id": "hihat_open",
+      "name": "Hi-Hat Abierto",
+      "muted": false,
+      "solo": false,
+      "volume": 0.75,
+      "steps": [false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false],
+      "velocities": [0, 0, 0, 0, 0, 0, 0.85, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    {
+      "id": "bass808",
+      "name": "Sub-Bajo 808",
+      "muted": false,
+      "solo": false,
+      "volume": 0.9,
+      "steps": [true, false, false, false, false, false, false, false, true, false, false, false, false, false, true, false],
+      "velocities": [1.0, 0, 0, 0, 0, 0, 0, 0, 0.95, 0, 0, 0, 0, 0, 0.9, 0]
+    },
+    {
+      "id": "rimshot",
+      "name": "Aro (Rimshot)",
+      "muted": false,
+      "solo": false,
+      "volume": 0.75,
+      "steps": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      "velocities": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}
