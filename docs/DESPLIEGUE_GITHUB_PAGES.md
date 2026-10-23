@@ -17,22 +17,18 @@ Todas las rutas son **relativas**, lo que garantiza que la aplicación funcione 
 
 ---
 
-## 2. Método de Despliegue Recomendado (Desde la Rama Principal)
+## 2. Estado de Despliegue en Vivo
 
-El método más sencillo y sin mantenimiento consiste en configurar GitHub Pages para servir directamente la carpeta `/web` o una rama dedicada:
+El despliegue está activo y automatizado mediante GitHub Actions:
 
-1. Ve a tu repositorio en GitHub: `https://github.com/tu-usuario/FoZ_SoundPro`.
-2. Haz clic en **Settings** (Configuración) $\rightarrow$ **Pages** (en el menú lateral izquierdo).
-3. En la sección **Build and deployment**:
-   - **Source:** Selecciona *Deploy from a branch*.
-   - **Branch:** Selecciona `main` y en la lista desplegable de carpetas selecciona `/web` (o la raíz si publicas la carpeta raíz).
-4. Pulsa **Save**.
-5. En pocos segundos, GitHub generará la URL pública segura bajo HTTPS:
-   `https://tu-usuario.github.io/FoZ_SoundPro/`
+- **Repositorio:** [https://github.com/manu-alvarez/FoZ-SoundPro](https://github.com/manu-alvarez/FoZ-SoundPro)
+- **URL Pública:** [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/)
+- **Workflow:** `.github/workflows/deploy.yml` (se ejecuta automáticamente con cada push a `main`).
+- **Certificado SSL / HTTPS:** Activo y forzado automáticamente por GitHub.
 
 ---
 
-## 3. Despliegue Automatizado mediante GitHub Actions (Opcional)
+## 3. Despliegue Automatizado mediante GitHub Actions
 
 Si prefieres compilar y publicar automáticamente en cada `git push` a `main`, puedes utilizar la acción estándar de GitHub Pages creando el archivo `.github/workflows/deploy.yml`:
 

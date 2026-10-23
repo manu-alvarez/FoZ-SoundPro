@@ -3,11 +3,21 @@
 **Estación modular de producción musical digital asistida por IA para Rap, Hip Hop, Trap y música electrónica.**
 Diseñada con coste 0 €, compatible con macOS y optimizada para equipos Windows con procesador Intel Core i5 (7.ª a 10.ª gen), 8 GB de RAM y gráfica integrada Intel.
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Studio-00f2fe?logo=github)](https://manu-alvarez.github.io/FoZ-SoundPro/)
+[![Repository](https://img.shields.io/badge/GitHub-manu--alvarez%2FFoZ--SoundPro-blue?logo=github)](https://github.com/manu-alvarez/FoZ-SoundPro)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![Status: Production](https://img.shields.io/badge/Status-Production%20Ready-success.svg)]()
+
+🌐 **Acceso Web en Vivo (GitHub Pages):** [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/)
+
 ---
 
 ## 1. Inicio Rápido (En 1 Clic y Sin Colisiones de Puerto)
 
 El sistema incluye detección automática de puertos libres (a partir del 9200) para no interferir con ningún servicio existente:
+
+### En la Web (Sin instalación):
+Abre directamente [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/) en cualquier navegador moderno (Chrome, Edge, Firefox, Safari).
 
 ### En macOS:
 ```bash
