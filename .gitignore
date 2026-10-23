@@ -1,0 +1,31 @@
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# Modelos y archivos de audio pesados
+*.gguf
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.wav
+*.flac
+*.mp3
+*.aiff
+
+# Salidas temporales
+tmp/
+temp/
+logs/
