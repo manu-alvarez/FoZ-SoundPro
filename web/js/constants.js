@@ -46,10 +46,28 @@ const FoZConstants = {
   BRIDGE_PORT: 8765,
   OLLAMA_PORT: 11434,
 
+  // Voces canónicas del secuenciador (deben coincidir con ProjectManager.getTrackDefs).
+  // Punto único de verdad para la normalización de patrones generados por IA.
+  AI_VOICE_IDS: [
+    "kick", "snare", "clap", "hihat_closed", "hihat_open", "bass808", "rimshot",
+    "crash", "ride", "tom_low", "tom_mid", "cowbell", "snap_trap", "shaker",
+    "stab_dark", "horn_slap",
+  ],
+
+  // Proveedores de IA por defecto (editables por el usuario en Diagnóstico).
+  // - bridge: FoZ Local Bridge en la propia máquina (proxy hacia Ollama)
+  // - ollama: servidor Ollama directo vía Tailscale (requiere OLLAMA_ORIGINS para CORS)
+  AI_PROVIDER_DEFAULTS: [
+    { id: "bridge-local", kind: "bridge", name: "FoZ Local Bridge", baseUrl: "http://127.0.0.1:8765", apiKey: "", model: "", enabled: true },
+    { id: "ollama-ts-2", kind: "ollama", name: "Ollama Tailscale .2.10", baseUrl: "http://100.100.2.10:11434", apiKey: "", model: "", enabled: true },
+    { id: "ollama-ts-1", kind: "ollama", name: "Ollama Tailscale .1.10", baseUrl: "http://100.100.1.10:11434", apiKey: "", model: "", enabled: true },
+  ],
+
   // Almacenamiento
   STORAGE_KEY_REC_SETTINGS: "foz_soundpro_rec_settings",
   STORAGE_KEY_CURRENT: "foz_soundpro_current_project",
   STORAGE_KEY_LIST: "foz_soundpro_saved_projects",
+  STORAGE_KEY_AI_SETTINGS: "foz_soundpro_ai_settings",
 };
 
 window.FoZConstants = FoZConstants;
