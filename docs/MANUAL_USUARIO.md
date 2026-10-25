@@ -53,6 +53,7 @@ Abre directamente [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-al
 - **Velocity por paso:** mantén `Shift` y haz clic sobre un paso activo para ciclar *suave (0.5) → medio (0.85) → forte (1.0)*; los pasos suaves se pintan más apagados y los fuertes brillan más.
 - **Color por instrumento:** cada fila y sus pasos iluminados usan su color propio para leer el patrón de un vistazo.
 - **Sample Studio (📂):** pulsa el botón de carpeta de cualquier fila para cargar una **muestra local** (WAV/MP3/M4A/OGG/FLAC) y dispararla como una voz más, respetando velocity y volumen. La muestra vive solo en la memoria de esta sesión (no queda dentro del `.foz`).
+- **Kit CC0 (v1.2.1):** botón **📂 Kit (carpeta)** importa una carpeta completa; cada archivo se asigna a la voz por nombre de archivo o subcarpeta (`kick`/`bombo` → kick; `hihat_closed` → hi-hat cerrado; `cow`/`cowbell` → cowbell; `maracas` → shaker). 11 voces con muestra (`workspace/samples-cc0/`, licencia CC0, fuente `stargate-sample-pack @ dbfd6ec`) + 5 voces mantienen síntesis (`bass808`, `snap_trap`, `stab_dark`, `horn_slap`, `ride`). El kit no entra en Git (`.gitignore *.wav`).
 - **Controles por fila:**
   - Clic en el *nombre* para escuchar la voz en preview.
   - `📂`: cargar muestra local · `✕`: quitar muestra y volver a la voz sintética.

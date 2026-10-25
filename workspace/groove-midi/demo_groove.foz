@@ -1,0 +1,9 @@
+{
+  "version": "1.1.0",
+  "name": "Groove MIDI Demo (CC BY 4.0)",
+  "bpm": 90,
+  "swing": 0.1,
+  "stepsCount": 16,
+  "credits_groove": "Magenta Groove MIDI Dataset — CC BY 4.0 — https://magenta.withgoogle.com/datasets/groove",
+  "note": "Archivo MIDI fuente no incluido en este árbol (licencia CC BY 4.0). Descarga del dataset en magenta.withgoogle.com/datasets/groove."
+}

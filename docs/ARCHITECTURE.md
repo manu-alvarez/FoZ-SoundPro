@@ -18,7 +18,7 @@ FoZ SoundPro está diseñado bajo una **arquitectura híbrida, modular, portable
 |  - Pads 4x4: golpes en vivo por triggerInstrument (respetan muestras    |
 |    locales) y grabación en vivo cuantizada de paso + velocity           |
 |  - Record Studio: cadena de voz pro y captura PCM -> WAV 16b            |
-|  - Base Library y Sample Studio (audio local solo en memoria)           |
+|  - Base Library y Sample Studio (audio local solo en memoria): `sampler.importKit(files)` con match carpeta/alias; `workspace/samples-cc0/` con 11 voces CC0 (stargate-sample-pack) + 5 síntesis (audio fuera de Git)           |
 |  - Renderizador y Exportador de WAV PCM 16b (OfflineAudioContext)       |
 |  - Generador Binario Standard MIDI File SMF1 (Canal 10 General MIDI)   |
 |  - Gestor de Proyectos (.foz JSON esquema 1.1 con migrador) y Presets   |
