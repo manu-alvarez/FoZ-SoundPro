@@ -59,6 +59,7 @@ body.studio-app {
   font-size: 14px;
   line-height: 1.5;
   height: 100vh;
+  height: 100dvh; /* móvil/tablet: respeta la barra dinámica del navegador */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -88,9 +89,13 @@ body.studio-app {
   min-width: 200px;
 }
 
-.brand-logo {
-  font-size: 26px;
-  filter: drop-shadow(0 0 8px var(--neon-cyan-glow));
+.brand-logo-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: block;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.28), 0 1px 4px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .brand-title {
@@ -1725,3 +1730,220 @@ input[type="range"]::-webkit-slider-thumb {
     flex-basis: 100%;
   }
 }
+
+/* ========================================================================= */
+/* v1.1.1 — PROVEEDORES DE IA (Tarjeta de Diagnóstico)                        */
+/* ========================================================================= */
+.diag-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 8px 0;
+}
+
+.diag-note code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--neon-cyan);
+}
+
+.ai-provider-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.ai-provider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-provider-row.active {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+}
+
+.prov-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prov-state {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.prov-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.prov-kind {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.prov-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  user-select: text;
+}
+
+.prov-detail {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.prov-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prov-model {
+  width: 200px;
+  max-width: 48vw;
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.field-disabled {
+  opacity: 0.45;
+}
+
+.prov-subheading {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin: 14px 0 8px 0;
+}
+
+.ai-prov-form-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.ai-prov-form-row .form-input,
+.ai-prov-form-row .form-select {
+  flex: 1;
+  min-width: 160px;
+}
+
+.ai-prov-form-row .form-input::placeholder {
+  color: var(--text-dim);
+}
+
+.api-key-note {
+  border-left: 3px solid var(--neon-cyan);
+  padding-left: 8px;
+}
+
+/* ========================================================================= */
+/* v1.1.1 — RESPONSIVE MÓVIL / TABLET (Android · iOS · iPad)                  */
+/* ====================================================================== */
+/* El estudio está pensado para escritorio, pero se usa perfectamente en      */
+/* móvil: barra lateral en fila, secuenciador con scroll horizontal sincronizado,*/
+/* transport bar deslizable y objetivos táctiles de 40px+.                    */
+/* ========================================================================= */
+
+@media (max-width: 768px) {
+  /* Secuenciador: la fila de instrumentos y la regla comparten un scroller */
+  .sequencer-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-lg);
+  }
+
+  .sequencer-scroll-wrap .sequencer-grid,
+  .sequencer-scroll-wrap .sequencer-timeline-header {
+    min-width: 780px;
+  }
+
+  /* Alineación fina de la regla con el inicio de los pasos de las filas */
+  .sequencer-scroll-wrap .track-header-spacer {
+    width: 234px;
+  }
+
+  /* Transport bar: en móvil se desliza horizontalmente para no aplastar controles */
+  .transport-controls {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .transport-time-display {
+    display: none; /* el compás sigue en el secuenciador; gana espacio táctil */
+  }
+
+  .studio-workspace {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .transport-bar {
+    padding: 6px 8px 8px 8px;
+  }
+
+  .transport-brand {
+    min-width: 0;
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  #master-visualizer {
+    display: none;
+  }
+
+  .btn-transport {
+    padding: 10px 14px; /* objetivo táctil ≥40px */
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .prompt-chips-container {
+    flex-wrap: wrap;
+  }
+
+  .ai-prov-form-row .form-input,
+  .ai-prov-form-row .form-select {
+    min-width: 100%;
+  }
+
+  .prov-model {
+    width: 100%;
+    max-width: none;
+  }
+}
+

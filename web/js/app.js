@@ -1126,17 +1126,249 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebarAiIndicator = document.getElementById("sidebar-ai-indicator");
   const badgeAiStatus = document.getElementById("badge-ai-status");
 
+  // --- Elementos de la tarjeta de Proveedores de IA (Diagnóstico) ---
+  const provList = document.getElementById("ai-provider-list");
+  const provKind = document.getElementById("ai-prov-kind");
+  const provName = document.getElementById("ai-prov-name");
+  const provUrl = document.getElementById("ai-prov-url");
+  const provKey = document.getElementById("ai-prov-key");
+  const provModel = document.getElementById("ai-prov-model");
+  const btnProvAdd = document.getElementById("btn-ai-prov-add");
+  const provStatusNote = document.getElementById("ai-prov-status");
+  const pullModelInput = document.getElementById("ai-pull-model");
+  const pullTargetSelect = document.getElementById("ai-pull-target");
+  const btnAiPull = document.getElementById("btn-ai-pull");
+  const pullStatus = document.getElementById("ai-pull-status");
+
   document.querySelectorAll(".btn-prompt-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       aiPromptInput.value = chip.getAttribute("data-prompt");
     });
   });
 
+  const KIND_LABELS = { bridge: "Puente", ollama: "Ollama", openai: "API" };
+
+  function providerStateLabel(s) {
+    if (!s) return { icon: "⚪", text: "Sin sondear" };
+    if (s.online) return { icon: "🟢", text: "online" };
+    if (s.authError) return { icon: "🔑", text: "clave denegada" };
+    if (s.reachable && !s.corsOk) return { icon: "🟡", text: "alcanzable (sin CORS)" };
+    return { icon: "🔴", text: "no accesible" };
+  }
+
+  function updateProvStatusNote(statuses) {
+    if (!provStatusNote) return;
+    const enabled = ai.getProviders().filter((p) => p.enabled !== false);
+    if (!enabled.length) {
+      provStatusNote.textContent = "Sin proveedores definidos: la generación usa el motor heurístico offline.";
+      return;
+    }
+    const online = (statuses || []).filter((s) => s.online).map((s) => {
+      const p = ai.getProvider(s.id);
+      return p ? p.name : s.id;
+    });
+    provStatusNote.textContent = online.length
+      ? `La IA está online vía: ${online.join(", ")}.`
+      : "Ningún proveedor online ahora mismo: la generación usa reglas heurísticas offline.";
+  }
+
+  /**
+   * Pinta la lista de proveedores como filas (sin innerHTML con datos de usuario).
+   */
+  function renderAIProviders(status) {
+    if (!provList) return;
+    const providers = ai.getProviders();
+    const byId = {};
+    ((status && status.statuses) || []).forEach((s) => (byId[s.id] = s));
+    provList.innerHTML = "";
+
+    if (!providers.length) {
+      const empty = document.createElement("p");
+      empty.className = "diag-note";
+      empty.textContent = "No hay proveedor definido. Añade uno abajo (por defecto se usa el motor heurístico).";
+      provList.appendChild(empty);
+    }
+
+    providers.forEach((p) => {
+      const s = byId[p.id];
+      const state = providerStateLabel(s);
+      const isActive = p.id === ai.settings.activeProvider;
+
+      const row = document.createElement("div");
+      row.className = "ai-provider-row" + (isActive ? " active" : "");
+      row.dataset.provId = p.id;
+
+      // Línea principal
+      const main = document.createElement("div");
+      main.className = "prov-main";
+      const stIcon = document.createElement("span");
+      stIcon.className = "prov-state";
+      stIcon.textContent = state.icon;
+      stIcon.title = state.text;
+      const nameEl = document.createElement("span");
+      nameEl.className = "prov-name";
+      nameEl.textContent = p.name;
+      const kindEl = document.createElement("span");
+      kindEl.className = "prov-kind";
+      kindEl.textContent = KIND_LABELS[p.kind] || p.kind;
+      const urlEl = document.createElement("code");
+      urlEl.className = "prov-url";
+      urlEl.textContent = p.baseUrl;
+      main.append(stIcon, nameEl, kindEl, urlEl);
+
+      // Detalle del último sondeo
+      const detail = document.createElement("div");
+      detail.className = "prov-detail";
+      detail.textContent = s ? s.detail : "No sondeado aún.";
+
+      // Acciones
+      const actions = document.createElement("div");
+      actions.className = "prov-actions";
+
+      const btnActive = document.createElement("button");
+      btnActive.className = "btn-secondary btn-xs";
+      btnActive.textContent = isActive ? "★ Activo" : "☆ Usar";
+      btnActive.disabled = isActive;
+      btnActive.addEventListener("click", () => {
+        ai.setActiveProvider(p.id);
+        showToast(`Proveedor activo: ${p.name}`);
+        refreshBridgeStatus();
+      });
+
+      const btnProbe = document.createElement("button");
+      btnProbe.className = "btn-secondary btn-xs";
+      btnProbe.textContent = "⟳ Sondear";
+      btnProbe.addEventListener("click", async () => {
+        btnProbe.disabled = true;
+        detail.textContent = "Sondeando...";
+        const s2 = await ai.probeProvider(p);
+        const st2 = providerStateLabel(s2);
+        stIcon.textContent = st2.icon;
+        stIcon.title = st2.text;
+        detail.textContent = s2.detail;
+        btnProbe.disabled = false;
+      });
+
+      const modelInput = document.createElement("input");
+      modelInput.type = "text";
+      modelInput.className = "form-input prov-model";
+      modelInput.placeholder = "Modelo preferido";
+      modelInput.maxLength = 120;
+      modelInput.value = p.model || "";
+      modelInput.title = "Modelo preferido: si existe en este proveedor se usa; si no, se elige uno disponible";
+      modelInput.addEventListener("change", () => {
+        const ok = ai.updateProvider(p.id, { model: modelInput.value.trim() });
+        if (ok && modelInput.value.trim()) {
+          showToast(`Modelo preferido de "${p.name}": ${modelInput.value.trim()}`);
+        }
+      });
+
+      const btnRemove = document.createElement("button");
+      btnRemove.className = "btn-danger btn-xs";
+      btnRemove.textContent = "✕ Quitar";
+      btnRemove.addEventListener("click", () => {
+        ai.removeProvider(p.id);
+        showToast(`Proveedor eliminado: ${p.name}`);
+        refreshBridgeStatus();
+        renderPullTargets();
+      });
+
+      actions.append(btnActive, btnProbe, modelInput, btnRemove);
+      row.append(main, detail, actions);
+      provList.appendChild(row);
+    });
+  }
+
+  function renderPullTargets() {
+    if (!pullTargetSelect) return;
+    const providers = ai.getProviders();
+    pullTargetSelect.innerHTML = "";
+    const bridge = providers.find((p) => p.kind === "bridge" && p.enabled !== false);
+    if (bridge) {
+      const opt = document.createElement("option");
+      opt.value = bridge.id;
+      opt.textContent = `${bridge.name} (ajuste: su OLLAMA_BASE_URL o el primer Ollama)`;
+      pullTargetSelect.appendChild(opt);
+    }
+    providers
+      .filter((p) => p.kind === "ollama" && p.enabled !== false)
+      .forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `${p.name} — ${p.baseUrl}`;
+        pullTargetSelect.appendChild(opt);
+      });
+  }
+  renderPullTargets();
+
+  // Venta de clave: solo es relevante para APIs compatibles con OpenAI
+  if (provKind && provKey) {
+    const syncKeyField = () => {
+      const isApi = provKind.value === "openai";
+      provKey.disabled = !isApi;
+      provKey.classList.toggle("field-disabled", !isApi);
+      if (!isApi) provKey.value = "";
+    };
+    provKind.addEventListener("change", syncKeyField);
+    syncKeyField();
+  }
+
+  if (btnProvAdd) {
+    btnProvAdd.addEventListener("click", () => {
+      const res = ai.addProvider({
+        kind: provKind.value,
+        name: provName.value.trim() || `${KIND_LABELS[provKind.value] || "Proveedor"} ${ai.getProviders().length + 1}`,
+        baseUrl: provUrl.value.trim(),
+        apiKey: provKey.value.trim(),
+        model: provModel.value.trim(),
+      });
+      if (!res.ok) {
+        showToast(res.error);
+        return;
+      }
+      provName.value = "";
+      provUrl.value = "";
+      provKey.value = "";
+      provModel.value = "";
+      renderPullTargets();
+      showToast("Proveedor añadido; comprobando estado...");
+      refreshBridgeStatus();
+    });
+  }
+
+  if (btnAiPull) {
+    btnAiPull.addEventListener("click", async () => {
+      const modelName = pullModelInput.value.trim();
+      if (!modelName) {
+        showToast("Escribe el nombre del modelo a descargar (ej. qwen3.5:4b).");
+        return;
+      }
+      btnAiPull.disabled = true;
+      if (pullStatus) pullStatus.textContent = "↻ Descargando modelo (puede tardar varios minutos)...";
+      try {
+        const res = await ai.pullModel(pullTargetSelect.value, modelName);
+        const okTxt = String(res.detail || "").toLowerCase();
+        if (pullStatus) {
+          pullStatus.textContent = okTxt.includes("success")
+            ? `✅ Modelo '${res.model}' disponible en ${res.host}.`
+            : `ℹ️ Respuesta de Ollama: ${res.detail}`;
+        }
+        showToast(`Descarga de '${res.model}' finalizada.`);
+      } catch (e) {
+        if (pullStatus) pullStatus.textContent = `⚠️ ${e.message}`;
+        showToast(`Descarga fallida: ${e.message}`);
+      } finally {
+        btnAiPull.disabled = false;
+      }
+    });
+  }
+
   async function refreshBridgeStatus() {
     const status = await ai.checkConnection();
-    if (status.connected) {
-      const modelName = status.activeModel || "Ollama";
-      aiBridgeStatusText.textContent = `Puente activo: ${modelName}`;
+    if (status.connected && status.provider) {
+      const kindLabel = KIND_LABELS[status.provider.kind] || "IA";
+      const modelSuffix = status.activeModel ? ` · ${status.activeModel}` : "";
+      aiBridgeStatusText.textContent = `${kindLabel} conectado: ${status.provider.name}${modelSuffix}`;
       sidebarAiIndicator.className = "ai-status-dot online";
       badgeAiStatus.className = "status-badge badge-green";
       badgeAiStatus.textContent = "Online";
@@ -1146,6 +1378,8 @@ document.addEventListener("DOMContentLoaded", () => {
       badgeAiStatus.className = "status-badge badge-gray";
       badgeAiStatus.textContent = "Offline";
     }
+    renderAIProviders(status);
+    updateProvStatusNote(status.statuses);
   }
   refreshBridgeStatus();
 
@@ -1328,6 +1562,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const diagAudioSampleRate = document.getElementById("diag-audio-samplerate");
   const diagAudioLatency = document.getElementById("diag-audio-latency");
   const diagBridgeStatus = document.getElementById("diag-bridge-status");
+  const diagBridgeUrl = document.getElementById("diag-bridge-url");
   const diagBridgeModels = document.getElementById("diag-bridge-models");
   const diagLmmsStatus = document.getElementById("diag-lmms-status");
   const btnRecheckBridge = document.getElementById("btn-recheck-bridge");
@@ -1341,16 +1576,34 @@ document.addEventListener("DOMContentLoaded", () => {
         : "Estándar";
     }
 
+    const bridgeProv = ai.getProviders().find((p) => p.kind === "bridge");
+    if (diagBridgeUrl) diagBridgeUrl.textContent = bridgeProv ? bridgeProv.baseUrl : "(sin puente definido)";
+
     ai.checkConnection().then((st) => {
-      if (st.connected) {
-        diagBridgeStatus.textContent = "Conectado a http://127.0.0.1:8765";
-        diagBridgeModels.textContent = st.models.map((m) => m.name).join(", ") || "Ninguno";
-        diagLmmsStatus.textContent = st.lmmsInstalled ? "Detectado en sistema" : "No detectado";
+      const bridgeStatus = (st.statuses || []).find((s) => {
+        const p = ai.getProvider(s.id);
+        return p && p.kind === "bridge";
+      });
+
+      if (bridgeStatus && bridgeStatus.online) {
+        diagBridgeStatus.textContent = `Conectado a ${bridgeProv.baseUrl}`;
+      } else if (bridgeStatus && bridgeStatus.reachable && !bridgeStatus.corsOk) {
+        diagBridgeStatus.textContent = "Alcanzable pero no leído (CORS/PNA): revisa que el proceso es el FoZ Local Bridge.";
       } else {
         diagBridgeStatus.textContent = "Desconectado (Modo reglas nativo activo)";
-        diagBridgeModels.textContent = "Modo Heurístico Autónomo";
-        diagLmmsStatus.textContent = "No disponible vía puente";
       }
+
+      diagBridgeModels.textContent = st.connected
+        ? (st.models.map((m) => m.name).join(", ") || "Ninguno")
+        : "Modo Heurístico Autónomo";
+
+      diagLmmsStatus.textContent = st.lmmsInstalled
+        ? "Detectado en sistema"
+        : bridgeStatus && bridgeStatus.online ? "No detectado" : "No disponible vía puente";
+
+      renderAIProviders(st);
+      updateProvStatusNote(st.statuses);
+      renderPullTargets();
     });
   }
 
@@ -1370,6 +1623,7 @@ document.addEventListener("DOMContentLoaded", () => {
   syncTrackpadUi();
   renderBaseList();
   refreshProjectUI();
+  updateDiagnosticsUI();
 
   window.addEventListener("beforeunload", () => {
     projMgr.saveCurrentProject(currentProject);

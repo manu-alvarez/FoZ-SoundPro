@@ -7,8 +7,30 @@
   <meta name="description" content="Estación modular de producción musical digital asistida por IA para Rap, Hip Hop, Trap y música electrónica. Kit de 16 voces, Trackpad FX, grabación con beat y bases importadas.">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0b10">
+
+  <!-- Iconos premium (logo + PNG generados: pestaña, PWA e iOS) -->
+  <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FoZ SoundPro">
+
+  <!-- Open Graph / Twitter: la imagen al compartir enlaces (URL absoluta GitHub Pages) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FoZ SoundPro">
+  <meta property="og:title" content="FoZ SoundPro — Beatmaker AI Studio">
+  <meta property="og:description" content="Estación modular de producción musical asistida por IA: 16 voces, Trackpad FX, grabación con beat y bases importadas. 100% offline, 0 €.">
+  <meta property="og:image" content="https://manu-alvarez.github.io/FoZ-SoundPro/icons/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="Logo de FoZ SoundPro">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="FoZ SoundPro — Beatmaker AI Studio">
+  <meta name="twitter:description" content="Estación modular de producción musical asistida por IA. 16 voces, Trackpad FX, Record Studio y bases. 0 €, sin configuración complicada.">
+  <meta name="twitter:image" content="https://manu-alvarez.github.io/FoZ-SoundPro/icons/icon-512.png">
+
   <link rel="stylesheet" href="css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
 </head>
 <body class="studio-app">
 
@@ -17,7 +39,7 @@
   <!-- ===================================================================== -->
   <header class="transport-bar" role="banner">
     <div class="transport-brand">
-      <div class="brand-logo">🎛️</div>
+      <img class="brand-logo-img" src="icons/logo-header.svg" alt="FoZ SoundPro" width="34" height="34" draggable="false">
       <div class="brand-info">
         <h1 class="brand-title">FoZ SoundPro</h1>
         <span class="brand-subtitle">Beatmaker AI Studio</span>
@@ -163,8 +185,8 @@
           <span class="status-val">16 voces sync</span>
         </div>
         <div class="status-row">
-          <span class="status-label">Destino:</span>
-          <span class="status-val">Win i5 / 8GB</span>
+          <span class="status-label">Plataformas:</span>
+          <span class="status-val">Win · mac · Linux</span>
         </div>
       </div>
     </nav>
@@ -187,16 +209,18 @@
         </div>
 
         <!-- Indicador Superior de Pasos / Regla de Tiempo -->
-        <div class="sequencer-timeline-header">
-          <div class="track-header-spacer">Instrumento / Controles</div>
-          <div class="steps-timeline" id="steps-timeline">
-            <!-- Marcadores generados dinámicamente por JS (1.1, 1.2, 1.3, 1.4, 2.1...) -->
+        <div class="sequencer-scroll-wrap">
+          <div class="sequencer-timeline-header">
+            <div class="track-header-spacer">Instrumento / Controles</div>
+            <div class="steps-timeline" id="steps-timeline">
+              <!-- Marcadores generados dinámicamente por JS (1.1, 1.2, 1.3, 1.4, 2.1...) -->
+            </div>
           </div>
-        </div>
 
-        <!-- Cuadrícula de Pistas del Secuenciador -->
-        <div class="sequencer-grid" id="sequencer-grid">
-          <!-- Las filas de pistas e interruptores de 16 pasos se inyectan dinámicamente -->
+          <!-- Cuadrícula de Pistas del Secuenciador -->
+          <div class="sequencer-grid" id="sequencer-grid">
+            <!-- Las filas de pistas e interruptores de 16 pasos se inyectan dinámicamente -->
+          </div>
         </div>
 
         <!-- Barra inferior de acciones del secuenciador -->
@@ -505,7 +529,7 @@
         <div class="panel-header">
           <div class="panel-title-area">
             <h2 class="panel-title">Asistente Musical con IA Local</h2>
-            <p class="panel-description">Genera y modifica patrones rítmicos mediante instrucciones de texto utilizando Ollama local o reglas de composición.</p>
+            <p class="panel-description">Genera y modifica patrones mediante Ollama (puente local o directo por Tailscale), APIs del propio usuario o el motor heurístico offline.</p>
           </div>
           <div class="ai-connection-indicator-card" id="ai-bridge-status-card">
             <span class="indicator-icon">🔌</span>
@@ -664,7 +688,7 @@
           <div class="diag-card">
             <h3 class="card-heading">🤖 FoZ Local Bridge & Ollama</h3>
             <table class="diag-table">
-              <tr><td>URL del Puente:</td><td><code>http://127.0.0.1:8765</code></td></tr>
+              <tr><td>URL del Puente:</td><td><code id="diag-bridge-url">http://127.0.0.1:8765</code></td></tr>
               <tr><td>Estado del Puente:</td><td id="diag-bridge-status">Desconectado</td></tr>
               <tr><td>Modelos Detectados:</td><td id="diag-bridge-models">Ninguno (Modo reglas)</td></tr>
               <tr><td>Soporte LMMS:</td><td id="diag-lmms-status">Comprobando...</td></tr>
@@ -674,20 +698,78 @@
             </div>
           </div>
 
-          <!-- Guía para Windows y Modo Portátil -->
+          <!-- Proveedores de IA (puente / Ollama directo / API del usuario) -->
           <div class="diag-card full-width">
-            <h3 class="card-heading">💻 Instrucciones para el PC de Destino (Windows Intel i5 / 8 GB RAM)</h3>
+            <h3 class="card-heading">🧠 Proveedores de IA (Puente · Ollama · API propia)</h3>
+            <p class="diag-note">
+              Prioridad de generación: <strong>proveedor activo online</strong> → primer proveedor disponible →
+              <strong>motor heurístico offline</strong>. Diagnóstico honesto por sondeo:
+              🟢 <em>online</em> (acceso completo con CORS) · 🟡 <em>alcanzable</em> (la red responde pero el
+              navegador no puede leerla: falta <code>OLLAMA_ORIGINS</code> o hay bloqueo HTTPS→HTTP) ·
+              🔴 <em>no accesible</em> · 🔑 <em>clave denegada</em>.
+            </p>
+
+            <div id="ai-provider-list" class="ai-provider-list"></div>
+
+            <div class="ai-prov-add-form">
+              <h4 class="prov-subheading">Añadir proveedor</h4>
+              <div class="ai-prov-form-row">
+                <select id="ai-prov-kind" class="form-select" title="Tipo de proveedor">
+                  <option value="bridge">Puente local (FoZ Local Bridge)</option>
+                  <option value="ollama" selected>Ollama directo (Tailscale / red local)</option>
+                  <option value="openai">API compatible OpenAI (clave propia)</option>
+                </select>
+                <input type="text" id="ai-prov-name" class="form-input" maxlength="80" placeholder="Nombre (ej. Ollama Servidor 1)">
+                <input type="text" id="ai-prov-url" class="form-input" maxlength="200" placeholder="http://100.100.2.10:11434">
+              </div>
+              <div class="ai-prov-form-row">
+                <input type="password" id="ai-prov-key" class="form-input" maxlength="300" placeholder="API key (solo para tipo OpenAI) — se guarda SOLO en este navegador" autocomplete="off">
+                <input type="text" id="ai-prov-model" class="form-input" maxlength="120" placeholder="Modelo preferido (opcional, ej. qwen3.5:4b)">
+                <button id="btn-ai-prov-add" class="btn-primary">➕ Añadir</button>
+              </div>
+              <p class="diag-note api-key-note">🔐 La API key <strong>nunca</strong> sale de este navegador ni viaja por el puente: solo se usa en la llamada HTTPS directa a tu API.</p>
+            </div>
+
+            <div class="ai-prov-pull-form">
+              <h4 class="prov-subheading">Descargar modelo (pull) en Ollama</h4>
+              <div class="ai-prov-form-row">
+                <input type="text" id="ai-pull-model" class="form-input" maxlength="120" placeholder="Modelo a descargar (ej. qwen3.5:4b o llamusic/llamusic:latest)">
+                <select id="ai-pull-target" class="form-select" title="Servidor Ollama destino"></select>
+                <button id="btn-ai-pull" class="btn-secondary">⬇ Descargar</button>
+              </div>
+              <p class="diag-note" id="ai-pull-status">La descarga puede tardar varios minutos según el tamaño del modelo (GB).</p>
+            </div>
+
+            <p id="ai-prov-status" class="diag-note">Proveedores: comprobando...</p>
+          </div>
+
+          <!-- Instrucciones multiplataforma -->
+          <div class="diag-card full-width">
+            <h3 class="card-heading">💻 Instrucciones multiplataforma (Windows · macOS · Linux)</h3>
             <div class="diag-guide-content">
-              <p><strong>Uso 100% Autónomo (Sin instalación):</strong></p>
+              <p><strong>1 — Uso autónomo sin instalación (las tres plataformas):</strong></p>
               <ol>
-                <li>Descomprime el archivo <code>FoZ_SoundPro_Portable_v1.1.zip</code> en cualquier carpeta.</li>
-                <li>Haz doble clic en <code>start_windows.bat</code>. Abrirá la estación directamente en tu navegador.</li>
-                <li>Todas las funciones funcionan a coste 0 € y sin conexión: síntesis de 16 voces, secuenciador, Trackpad FX, grabación sobre beat, bases importadas y exports WAV/MIDI.</li>
+                <li>Descomprime <code>FoZ_SoundPro_Portable_v1.1.zip</code> en cualquier carpeta.</li>
+                <li>Lanza el archivo de arranque de tu sistema:
+                  <strong>Windows</strong> → <code>start_windows.bat</code> (doble clic) ·
+                  <strong>macOS</strong> → <code>start_mac.sh</code> (doble clic o <code>sh start_mac.sh</code>) ·
+                  <strong>Linux</strong> → <code>sh start_linux.sh</code> (o <code>chmod +x start_linux.sh &amp;&amp; ./start_linux.sh</code>).</li>
+                <li>El lanzador arranca un servidor web local libre de colisiones, y abre el estudio en el navegador.</li>
+                <li>Sin estas herramientas, todo funciona igual a coste 0 y sin conexión: síntesis de 16 voces, secuenciador 16/32/64 pasos, Trackpad FX, grabación sobre beat, bases importadas y exports WAV/MIDI.</li>
               </ol>
-              <p><strong>Conexión opcional con Ollama y LMMS:</strong></p>
+
+              <p><strong>2 — Conexión opcional con IA (Ollama):</strong></p>
               <ul>
-                <li>Si instalas Ollama en Windows, inicia el puente local ejecutando <code>python scripts/automation/local_bridge.py</code>.</li>
-                <li>Si instalas LMMS 1.2.2 en Windows, puedes importar los archivos MIDI exportados en <code>C:\Program Files\LMMS</code> para arreglos orquestales o mezcla multipista avanzada.</li>
+                <li>Instala Ollama en <em>cualquiera</em> de las tres plataformas desde <code>ollama.com</code> (no la empaquetamos: descarga del fabricante).</li>
+                <li>Inicia el puente local: <code>python3 scripts/automation/local_bridge.py</code> (Windows: <code>python scripts\automation\local_bridge.py</code>). Es la ruta recomendada: el puente traduce Ollama ↔ navegador sin tocar CORS.</li>
+                <li>Alternativa directa: en Ollama define <code>OLLAMA_ORIGINS</code> permitiendo tu origen local para que el navegador pueda leer los modelos directamente (útil en red Tailscale).</li>
+                <li>Si falta un modelo, descárgalo desde esta misma página con el botón <em>Descargar (pull)</em> de la tarjeta de arriba.</li>
+              </ul>
+
+              <p><strong>3 — Opcional LMMS (arreglos y mezcla multipista):</strong></p>
+              <ul>
+                <li>Si LMMS está instalado, el puente lo detecta automáticamente y esta tabla lo muestra.</li>
+                <li>Importa los archivos MIDI exportados en LMMS 1.2.2 para arreglos orquestales o mezcla multipista avanzada.</li>
               </ul>
             </div>
           </div>
