@@ -19,7 +19,8 @@ FoZ SoundPro está diseñado bajo una **arquitectura híbrida, modular, portable
 |  - Renderizador y Exportador de WAV PCM 16b (OfflineAudioContext)       |
 |  - Generador Binario Standard MIDI File SMF1 (Canal 10 General MIDI)   |
 |  - Gestor de Proyectos (.foz JSON esquema 1.1 con migrador) y Presets   |
-|  - Asistente Heurístico Musical (100% Offline / Reglas de Composición)  |
+|  - IA Multi-Proveedor: puente local / Ollama directo (Tailscale) /      |
+|    API del usuario (OpenAI-compatible) / Motor Heurístico offline       |
 +-------------------------------------------------------------------------+
                                     |
                   [Peticiones REST HTTP / JSON con CORS]
@@ -27,10 +28,11 @@ FoZ SoundPro está diseñado bajo una **arquitectura híbrida, modular, portable
 +-------------------------------------------------------------------------+
 |                CAPA 2: FoZ Local Bridge (Python stdlib)                 |
 |  - Servidor ligero (scripts/automation/local_bridge.py)                |
-|  - Detección dinámica de puertos libres (>= 9200) sin colisiones       |
-|  - Conector seguro con Ollama Local (http://127.0.0.1:11434)           |
-|  - Filtro estricto: solo modelos locales (qwen3.5:4b, llamusic)         |
-|  - Validación de esquemas JSON antes de responder a la Web              |
+|  - Endpoints: /api/status, /api/generate-pattern, /api/pull (POST)     |
+|  - Conector seguro con Ollama (OLLAMA_BASE_URL; hosts alternativos     |
+|    validados, p. ej. Tailscale http://100.100.x.x:11434)                |
+|  - CORS: Allow-Origin * + Access-Control-Allow-Private-Network (PNA)   |
+|  - Esquema JSON de 16 voces normalizado antes de responder a la Web     |
 +-------------------------------------------------------------------------+
                   |                                     |
                   v                                     v
@@ -69,4 +71,5 @@ FoZ SoundPro está diseñado bajo una **arquitectura híbrida, modular, portable
 - **Lanzadores sin colisión:**
   - `start_mac.sh` (macOS).
   - `start_windows.bat` (Windows).
-  - Ambos invocan `scripts/automation/serve_studio.py`, el cual escanea y reserva dinámicamente puertos libres a partir del 9200, evitando interferir con cualquier proceso previo del usuario.
+  - `start_linux.sh` (Linux).
+  - Los tres invocan `scripts/automation/serve_studio.py`, el cual escanea y reserva dinámicamente puertos libres a partir del 9200, evitando interferir con cualquier proceso previo del usuario.

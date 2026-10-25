@@ -1,7 +1,7 @@
 # FoZ SoundPro — Beatmaker AI Studio
 
 **Estación modular de producción musical digital asistida por IA para Rap, Hip Hop, Trap y música electrónica.**
-Diseñada con coste 0 €, compatible con macOS y optimizada para equipos Windows con procesador Intel Core i5 (7.ª a 10.ª gen), 8 GB de RAM y gráfica integrada Intel.
+Diseñada con coste 0 €, funciona en **Windows, macOS y Linux** (optimizada para hardware estándar: Intel Core i5, 8 GB de RAM, gráfica integrada), con **uso responsive en móvil y tablet** (Android e iPhone/iPad) desde el navegador.
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Studio-00f2fe?logo=github)](https://manu-alvarez.github.io/FoZ-SoundPro/)
 [![Repository](https://img.shields.io/badge/GitHub-manu--alvarez%2FFoZ--SoundPro-blue?logo=github)](https://github.com/manu-alvarez/FoZ-SoundPro)
@@ -28,6 +28,11 @@ Abre directamente [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-al
 Haz doble clic sobre `start_windows.bat` (o ejecútalo desde cmd):
 ```cmd
 start_windows.bat
+```
+
+### En Linux:
+```bash
+sh start_linux.sh
 ```
 
 ---
@@ -59,15 +64,22 @@ start_windows.bat
   - Importa MP3/M4A/WAV/Ogg/FLAC **locales** como instrumental sobre el beat: bucle, ganancia y fades configurables.
   - Arranque sincronizado con el transporte del secuenciador y horneado determinista en el export WAV.
   - Manifiestos `.m3u/.m3u8` como catálogo local (empareja por nombre de archivo; sin streaming remoto, modo offline).
-- **🤖 Asistente Musical con IA Local (Dual-Mode):**
-  - *Modo Ollama Local:* Conexión segura con modelos locales (`qwen3.5:4b` o `llamusic/llamusic:latest`) mediante `scripts/automation/local_bridge.py`.
-  - *Modo Heurístico Autónomo:* Generador rítmico basado en teoría musical que funciona al 100% sin conexión si Ollama no está presente.
+- **🤖 Asistente Musical con IA (Multi-Proveedor):**
+  - *FoZ Local Bridge:* conexión segura con Ollama local mediante `scripts/automation/local_bridge.py` (ruta recomendada desde HTTPS).
+  - *Ollama directo:* endpoints propios o en red Tailscale (p. ej. `http://100.100.2.10:11434`) con diagnóstico honesto por sondeo: online / alcanzable sin CORS / no accesible.
+  - *API propia del usuario:* cualquier endpoint compatible con OpenAI (baseUrl + clave; la clave se guarda SOLO en el navegador).
+  - *Descarga de modelos (pull):* si falta un modelo, se descarga en Ollama desde la propia interfaz (puente u Ollama directo).
+  - *Modo Heurístico Autónomo:* generador rítmico por teoría musical que funciona al 100% sin conexión si ningún proveedor responde.
+  - Diagnóstico y gestión de proveedores en la pestaña **Diagnóstico**; esquema JSON de 16 voces con normalización compartida.
   - Previsualización gráfica en mini-grid y botón para aplicar directamente al secuenciador.
 - **📁 Gestión de Proyectos (.foz esquema 1.1):**
   - Persistencia automática en `LocalStorage`.
   - Exportación e importación de proyectos JSON versionados (`.foz`) con **migrador automático v1.0 → 1.1** (los archivos antiguos cargan sin perder pasos; las voces nuevas aparecen vacías).
   - Estado del Trackpad FX persistido por proyecto; los buffers de muestras nunca se serializan.
   - Proyecto de demostración incluido (`workspace/projects/demo_trap_beat.foz`).
+- **📱 Uso responsive en móvil/tablet y PWA:**
+  - Diseño adaptado a pantallas táctiles: seguridad lateral en fila, secuenciador con scroll horizontal, barra de transporte deslizable y targets táctiles amplios (funciona en Android, iPhone y iPad).
+  - Logo premium con iconos SVG/PNG (192·512·apple-touch 180), manifest PWA y metadatos Open Graph/Twitter para que al compartir el enlace aparezca la imagen del estudio.
 
 ---
 

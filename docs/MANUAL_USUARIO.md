@@ -19,6 +19,12 @@ start_windows.bat
 ```
 *Nota:* Si tienes Python instalado, iniciará el servidor en un puerto libre a partir de 9200. Si no tienes Python, abrirá `web/index.html` directamente en tu navegador por defecto.
 
+### En Linux:
+```bash
+sh start_linux.sh
+```
+*Nota:* igual que en macOS, inicia un servidor local en un puerto libre ≥9200 y abre el estudio en tu navegador. Sin Python, abre `web/index.html` con el navegador por defecto (requiere `xdg-open`).
+
 ### En la Web (sin instalación):
 Abre directamente [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/).
 
@@ -127,19 +133,22 @@ Toca tu beat por encima de una instrumental o audio importado:
 
 ---
 
-### 2.6 Asistente Musical con IA Local
-El asistente opera en dos modalidades transparentes:
+### 2.6 Asistente Musical con IA (Multi-Proveedor)
+El asistente elige proveedor por prioridad: **proveedor activo con estado online** → **primer proveedor disponible** → **motor heurístico offline**. Gestiónalo todo en la pestaña **Diagnóstico ▸ Proveedores de IA**:
 
-1. **Modo Ollama Local (cuando el puente está activo):**
-   - Se comunica con el modelo local `qwen3.5:4b` o `llamusic/llamusic:latest` a través de `http://127.0.0.1:8765`.
-   - Procesa lenguaje natural y genera una estructura estricta en JSON con el ritmo solicitado.
-2. **Modo Heurístico Autónomo (100% Offline):**
-   - Si Ollama no está instalado o el puente está desconectado, el botón de generación sigue funcionando sin interrupciones.
-   - Aplica matrices de probabilidad de teoría musical para construir ritmos coherentes del estilo elegido.
-3. **Acciones del Asistente:**
-   - *Previsualización:* muestra un mini-mapa de los 16 pasos por instrumento y la explicación musical.
-   - *Aplicar al Secuenciador:* transfiere el ritmo generado directamente a la sesión activa.
-   - *Descargar como MIDI:* exporta el patrón propuesto como `.mid` sin sobrescribir tu trabajo actual.
+1. **FoZ Local Bridge (recomendado):** el puente local (`python3 scripts/automation/local_bridge.py`) consulta Ollama y devuelve el patrón con CORS configurado. Es la ruta fiable desde la página HTTPS de GitHub Pages.
+2. **Ollama directo:** servidores Ollama accesibles por red, incluidos los tuyos vía **Tailscale** (p. ej. `http://100.100.2.10:11434`). El diagnóstico es honesto por sondeo:
+   - 🟢 *online:* accesible con CORS y lista de modelos leída.
+   - 🟡 *alcanzable (sin CORS):* la red responde pero el navegador no puede leerla — define `OLLAMA_ORIGINS` en ese Ollama y reinícialo, o usa el puente.
+   - 🔴 *no accesible:* red/Tailscale caída, o bloqueo de contenido mixto (HTTPS→HTTP) típico de Pages: usa el puente.
+3. **API propia del usuario:** cualquier endpoint compatible con OpenAI (`baseUrl` + API key + modelo). La clave se guarda **solo en el almacenamiento local de tu navegador**; nunca viaja por el puente ni se guarda en el proyecto.
+4. **Descarga de modelos (pull):** si el modelo que necesitas no está instalado, escribe su nombre (`qwen3.5:4b`, `llamusic/llamusic:latest`, `phi4-mini-reasoning:latest`…) y pulsa `⬇ Descargar` en la tarjeta de proveedores. La descarga puede tardar minutos según los GB del modelo.
+5. **Modelo preferido:** en cada fila de proveedor puedes fijar el modelo a usar; si no existe, el asistente elige el mejor disponible (`qwen3.5:4b` → `llamusic` → el primero de la lista).
+6. **Modo Heurístico Autónomo (100% offline):** si ningún proveedor responde, el generador por teoría musical sigue funcionando sin conexión.
+7. **Acciones del Asistente:**
+   - *Previsualización:* mini-mapa de pasos por voz y explicación musical en texto.
+   - *Aplicar al Secuenciador:* transfiere el patrón generado a la sesión activa (normalizado a las **16 voces**).
+   - *Descargar como MIDI:* exporta el patrón propuesto como `.mid` sin sobrescribir tu trabajo.
 
 ---
 
@@ -164,3 +173,14 @@ El asistente opera en dos modalidades transparentes:
 - **Risers de trap:** sostén el pad en la esquina superior-izquierda con `Eco` activado mientras grabas (momentáneo como pedal).
 - **Re-mezcla de tu beat importado:** carga tu base, activa `Solo beat` en Record Studio y graba 30 s del beat con los FX horneados para previsualizar cómo sonará exportado.
 - **Nudge:** si tu voz suena siempre "tarde" respecto al beat, prueba -30/-50 ms en `Ajuste fino` y escucha la toma siguiente: los valores se recuerdan entre sesiones.
+
+---
+
+## 4. Uso en móvil y tablet (Android · iPhone · iPad)
+La estación está pensada para escritorio, pero se usa perfectamente desde el navegador móvil:
+
+- **Instalación como app (PWA):** en Chrome/Android, "Añadir a la pantalla de inicio"; en iOS Safari, `Compartir ▸ Añadir a pantalla de inicio`. El logo premium y el manifest están configurados.
+- **Adaptación responsive:** en pantallas estrechas la barra de módulos pasa a fila horizontal deslizable, la barra de transporte se desplaza en horizontal y el secuenciador hace scroll lateral manteniendo la regla de compases alineada.
+- **Trackpad FX y velocidades funcionan con dedos** (Pointer Events multitáctil; sin scroll accidental dentro del pad).
+- **Grabación:** en móvil el navegador exige HTTPS para el micrófono (ideal: GitHub Pages). Sistema recomendado para grabar de forma determinista: escritorio.
+- **Almacenamiento:** tomas, bases y proyectos viven en el almacenamiento de ese navegador; el cambio entre dispositivos se hace con `.foz` y descargas WAV/MIDI, no sincronizando en la nube.
