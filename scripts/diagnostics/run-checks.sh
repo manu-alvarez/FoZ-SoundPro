@@ -130,8 +130,8 @@ print_status_line "6. Paquete portátil ZIP y suma SHA-256" "$STATUS_ZIP"
 
 printf "\n${BOLD}Artefactos principales disponibles:${RESET}\n"
 printf "  • Aplicación Web Estática: ${DIM}%s/web/index.html${RESET}\n" "$PROJECT_ROOT"
-printf "  • Paquete Portátil ZIP:     ${DIM}%s/dist/FoZ_SoundPro_Portable_v1.0.zip${RESET}\n" "$PROJECT_ROOT"
-printf "  • Suma Criptográfica:      ${DIM}%s/dist/FoZ_SoundPro_Portable_v1.0.zip.sha256${RESET}\n" "$PROJECT_ROOT"
+printf "  • Paquete Portátil ZIP:     ${DIM}%s/dist/FoZ_SoundPro_Portable_v1.1.zip${RESET}\n" "$PROJECT_ROOT"
+printf "  • Suma Criptográfica:      ${DIM}%s/dist/FoZ_SoundPro_Portable_v1.1.zip.sha256${RESET}\n" "$PROJECT_ROOT"
 
 OVERALL_STATUS=0
 if [ "$STATUS_DOCTOR" -ne 0 ] || [ "$STATUS_WAV" -ne 0 ] || [ "$STATUS_MIDI" -ne 0 ] || \

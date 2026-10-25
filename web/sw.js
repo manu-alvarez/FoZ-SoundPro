@@ -5,15 +5,20 @@
  * de la estación de producción musical sin conexión a Internet.
  */
 
-const CACHE_NAME = "foz-soundpro-v1.0.0";
+const CACHE_NAME = "foz-soundpro-v1.1.0";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./css/style.css",
+  "./js/constants.js",
   "./js/audio-engine.js",
   "./js/midi-engine.js",
   "./js/project-manager.js",
   "./js/sequencer.js",
+  "./js/sampler.js",
+  "./js/trackpad.js",
+  "./js/base-library.js",
+  "./js/rec-studio.js",
   "./js/ai-assistant.js",
   "./js/app.js",
   "./manifest.json",
