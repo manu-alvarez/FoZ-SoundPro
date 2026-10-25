@@ -1,9 +1,10 @@
 /**
- * FoZ SoundPro — Real-time Step Sequencer Engine
- * ===============================================
+ * FoZ SoundPro — Real-time Step Sequencer Engine (v1.1)
+ * =====================================================
  * Planificador de alta precisión mediante Web Audio Lookahead Scheduling.
- * Evita el retardo y desincronización (drift) de setTimeout/setInterval convencionales.
- * Gestiona el cursor visual con requestAnimationFrame, swing ajustable y controles por pista.
+ * v1.1: constantes musicales unificadas con export WAV/MIDI (FoZConstants)
+ * para que lo oído en vivo sea EXACTAMENTE igual al render offline y al MIDI.
+ * Añade límites de pasos (4..64) y hooks para bases importadas y FX del trackpad.
  */
 
 class FoZSequencer {
@@ -17,21 +18,26 @@ class FoZSequencer {
     this.timerId = null;
     this.isMetronomeActive = false;
 
-    // Configuración de planificación lookahead
-    this.lookahead = 25.0; // Intervalo de comprobación en ms
-    this.scheduleAheadTime = 0.10; // Ventana de audio adelantada en segundos (100 ms)
+    this.lookahead = 25.0;      // Intervalo de comprobación en ms
+    this.scheduleAheadTime = 0.10; // Ventana de audio adelantada en segundos
 
-    // Referencia al proyecto activo
     this.project = null;
 
-    // Callbacks para actualización de UI
+    // Callbacks para actualización de UI / módulos externos (bases, trackpad)
     this.onStepChange = null;
     this.onPlayStateChange = null;
+    this.onBpmChange = null;
   }
 
   setProject(project) {
     this.project = project;
     this.currentStep = 0;
+    this._syncFxBusToBpm();
+  }
+
+  _syncFxBusToBpm() {
+    // Sincroniza el tiempo de eco del trackpad con el tempo (corchea musical)
+    if (this.onBpmChange) this.onBpmChange(this.project ? this.project.bpm : 90);
   }
 
   async start() {
@@ -42,8 +48,8 @@ class FoZSequencer {
     this.currentStep = 0;
     this.nextNoteTime = this.audio.ctx.currentTime + 0.05;
 
-    // Iniciar bucle de planificación
     this.timerId = setInterval(() => this._scheduler(), this.lookahead);
+    this._syncFxBusToBpm();
 
     if (this.onPlayStateChange) this.onPlayStateChange(true);
   }
@@ -79,7 +85,6 @@ class FoZSequencer {
   _scheduler() {
     if (!this.project || !this.isPlaying) return;
 
-    // Planificar mientras el tiempo de la siguiente nota esté dentro de la ventana de anticipación
     while (this.nextNoteTime < this.audio.ctx.currentTime + this.scheduleAheadTime) {
       this._scheduleStep(this.currentStep, this.nextNoteTime);
       this._advanceStep();
@@ -92,7 +97,6 @@ class FoZSequencer {
     const hasSolo = this.project.tracks.some((t) => t.solo);
 
     this.project.tracks.forEach((track) => {
-      // Reglas de mute y solo
       if (hasSolo) {
         if (!track.solo) return;
       } else {
@@ -100,17 +104,18 @@ class FoZSequencer {
       }
 
       if (track.steps[stepNumber]) {
-        const vel = (track.velocities ? track.velocities[stepNumber] : 0.85) * (track.volume !== undefined ? track.volume : 0.85);
+        const vel = (track.velocities ? track.velocities[stepNumber] : FoZConstants.DEFAULT_VELOCITY)
+          * (track.volume !== undefined ? track.volume : FoZConstants.DEFAULT_VOLUME);
         this.audio.triggerInstrument(track.id, time, vel);
       }
     });
 
-    // Metrónomo en los 4 pulsos principales (pasos 0, 4, 8, 12)
+    // Metrónomo en los 4 pulsos principales
     if (this.isMetronomeActive && stepNumber % 4 === 0) {
       this.audio.triggerMetronome(time, stepNumber === 0);
     }
 
-    // Programar actualización visual exacta en el hilo gráfico
+    // Actualización visual sincronizada con el hilo gráfico
     const visualTime = (time - this.audio.ctx.currentTime) * 1000;
     setTimeout(() => {
       if (this.isPlaying && this.onStepChange) {
@@ -126,17 +131,18 @@ class FoZSequencer {
 
   _advanceStep() {
     const secondsPerBeat = 60.0 / this.project.bpm;
-    let stepDuration = secondsPerBeat / 4; // 16th note (semicorchea)
+    let stepDuration = secondsPerBeat / 4; // semicorchea
 
-    // Aplicar Swing si está activo y el paso es impar
+    // Factor de swing UNIFICADO con export WAV/MIDI (FoZConstants.SWING_FACTOR):
+    // el paso impar se retrasa; el siguiente par recupera el hueco.
     if (this.project.swing && this.currentStep % 2 === 0) {
-      stepDuration += stepDuration * (this.project.swing * 0.35);
+      stepDuration += stepDuration * (this.project.swing * FoZConstants.SWING_FACTOR);
     } else if (this.project.swing && this.currentStep % 2 === 1) {
-      stepDuration -= stepDuration * (this.project.swing * 0.35);
+      stepDuration -= stepDuration * (this.project.swing * FoZConstants.SWING_FACTOR);
     }
 
     this.nextNoteTime += Math.max(0.02, stepDuration);
-    this.currentStep = (this.currentStep + 1) % (this.project.stepsCount || 16);
+    this.currentStep = (this.currentStep + 1) % (this.project.stepsCount || FoZConstants.DEFAULT_STEPS_COUNT);
   }
 
   toggleStep(trackIndex, stepIndex) {
@@ -144,10 +150,10 @@ class FoZSequencer {
     const track = this.project.tracks[trackIndex];
     track.steps[stepIndex] = !track.steps[stepIndex];
 
-    // Si se activa, reproducir sonido previo al hacer clic para retroalimentación inmediata
     if (track.steps[stepIndex]) {
       this.audio.init().then(() => {
-        const vel = (track.velocities ? track.velocities[stepIndex] : 0.85) * (track.volume || 0.85);
+        const vel = (track.velocities ? track.velocities[stepIndex] : FoZConstants.DEFAULT_VELOCITY)
+          * (track.volume || FoZConstants.DEFAULT_VOLUME);
         this.audio.triggerInstrument(track.id, 0, vel);
       });
     }
@@ -158,7 +164,7 @@ class FoZSequencer {
   setStepVelocity(trackIndex, stepIndex, velocity) {
     if (!this.project || !this.project.tracks[trackIndex]) return;
     const track = this.project.tracks[trackIndex];
-    if (!track.velocities) track.velocities = new Array(this.project.stepsCount || 16).fill(0.85);
+    if (!track.velocities) track.velocities = new Array(this.project.stepsCount || 16).fill(FoZConstants.DEFAULT_VELOCITY);
     track.velocities[stepIndex] = Math.max(0.1, Math.min(1.0, velocity));
     this.projectMgr.saveCurrentProject(this.project);
   }
@@ -185,7 +191,34 @@ class FoZSequencer {
 
   setBpm(newBpm) {
     if (!this.project) return;
-    this.project.bpm = Math.max(30, Math.min(300, parseInt(newBpm, 10) || 90));
+    this.project.bpm = Math.max(
+      FoZConstants.MIN_BPM,
+      Math.min(FoZConstants.MAX_BPM, parseInt(newBpm, 10) || 90)
+    );
+    this.projectMgr.saveCurrentProject(this.project);
+    this._syncFxBusToBpm();
+  }
+
+  setStepsCount(count) {
+    if (!this.project) return;
+    const n = Math.max(FoZConstants.MIN_STEPS_COUNT, Math.min(FoZConstants.MAX_STEPS_COUNT, parseInt(count, 10) || 16));
+    if (n === this.project.stepsCount) return;
+
+    const oldCount = this.project.stepsCount || 16;
+    this.project.stepsCount = n;
+
+    this.project.tracks.forEach((track) => {
+      const steps = new Array(n).fill(false);
+      for (let i = 0; i < Math.min(oldCount, n); i++) steps[i] = track.steps[i];
+      track.steps = steps;
+
+      const vels = new Array(n).fill(FoZConstants.DEFAULT_VELOCITY);
+      for (let i = 0; i < Math.min(oldCount, n); i++) {
+        vels[i] = track.velocities && track.velocities[i] != null ? track.velocities[i] : FoZConstants.DEFAULT_VELOCITY;
+      }
+      track.velocities = vels;
+    });
+
     this.projectMgr.saveCurrentProject(this.project);
   }
 
