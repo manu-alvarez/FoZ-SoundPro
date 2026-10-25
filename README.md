@@ -37,7 +37,7 @@ sh start_linux.sh
 
 ---
 
-## 2. Módulos y Capacidades Implementadas (v1.1 The Expansion)
+## 2. Módulos y Capacidades Implementadas (v1.2 Pads)
 
 - **🥁 Secuenciador por Pasos (16 voces · 16/32/64 pasos):**
   - Síntesis Web Audio API nativa para **16 voces** (sin licencias ni assets externos): Bombo (Kick 808), Caja (Snare), Palmas (Clap), Hi-Hat Cerrado, Hi-Hat Abierto, Sub-Bajo 808, Aro (Rimshot), **Crash, Ride, Tom Grave, Tom Medio, Cowbell, Snap Trap, Shaker, Stab Dark y Horn Slap**.
@@ -49,6 +49,11 @@ sh start_linux.sh
   - Eje X = filtro Lowpass/Highpass (120 Hz → 18 kHz) y Eje Y = saturación *Tape Drive* o *Eco de corchea* sincronizado al BPM.
   - Multitáctil (Pointer Events), modo momentáneo estilo pedal CC, doble toque en el centro para reset y presets por estilo (Clean / Trap Lush / Boom Bap Dusty / Drill Dark).
   - El estado del pad se guarda en el proyecto y puede hornearse en el export WAV.
+- **🎛️ Pads — Caja de Ritmos 4×4 (jugable en vivo, *nueva en v1.2*):**
+  - Grid 4×4 de pads con las 16 voces de la sesión (mismos colores que el secuenciador; dispara tus muestras locales vía Sample Studio).
+  - **Multitáctil** (Pointer Events) y teclado **QWERTY** (1234 · QWER · ASDF · ZXCV) con slider de velocity global.
+  - **Grabación en vivo cuantizada:** con PLAY en marcha y REC armado, cada golpe escribe su paso + velocity en el secuenciador (repetir sobre un paso encendido no lo borra) y persiste con el proyecto.
+  - Los golpes pasan por el bus del Trackpad FX (filtro/Tape/Eco en vivo; queda aplicado al soltar salvo modo MOMENTÁNEO).
 - **💾 Exportación de Audio WAV Real:**
   - Renderizado directo en navegador mediante `OfflineAudioContext`.
   - Generación de archivos PCM estéreo de 16 bits a 44.1 kHz conforme al estándar RIFF/WAVE (con base importada y FX del trackpad horneados).
@@ -88,9 +93,9 @@ sh start_linux.sh
 Para trasladar la estación a otro equipo Windows sin instalar herramientas de compilación ni entornos pesados:
 
 1. El archivo empaquetado y verificado se encuentra en:
-   [`dist/FoZ_SoundPro_Portable_v1.1.zip`](dist/FoZ_SoundPro_Portable_v1.1.zip).
+   [`dist/FoZ_SoundPro_Portable_v1.2.zip`](dist/FoZ_SoundPro_Portable_v1.2.zip).
 2. Suma criptográfica de integridad:
-   [`dist/FoZ_SoundPro_Portable_v1.1.zip.sha256`](dist/FoZ_SoundPro_Portable_v1.1.zip.sha256).
+   [`dist/FoZ_SoundPro_Portable_v1.2.zip.sha256`](dist/FoZ_SoundPro_Portable_v1.2.zip.sha256).
 3. Guía completa de uso en Windows: ver [docs/PAQUETE_WINDOWS.md](docs/PAQUETE_WINDOWS.md).
 
 ---

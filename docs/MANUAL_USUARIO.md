@@ -85,7 +85,20 @@ El pad multidimensional aplica FX al bus master del beat **en tiempo real**:
 
 ---
 
-### 2.3 Presets de Estilo Integrados (8 kits)
+### 2.3 Pads — Caja de Ritmos 4×4 (*nueva en v1.2*)
+La pestaña **Pads** convierte el estudio en un controlador jugable tipo MPC sobre las mismas 16 voces del secuenciador (mismos colores; si cargaste muestras locales por pista, los pads las disparan vía Sample Studio):
+
+- **Grid 4×4 jugable:** golpea cualquier voz con ratón o dedo; es **multitáctil** (varias voces a la vez, Pointer Events sin scroll accidental) y el pad destella al golpear.
+- **Teclado QWERTY:** en ordenador tocas sin ratón — `1 2 3 4` (voces 13-16), `Q W E R` (1-4), `A S D F` (5-8) y `Z X C V` (9-12). Cada pad muestra su tecla en la esquina. La barra espaciadora sigue siendo Play/Stop y las teclas de pads no secuestran campos de texto ni prompts.
+- **Velocity:** slider global (10%-100%) que aplica a todos los golpes.
+- **Grabación en vivo cuantizada (el núcleo de la pestaña):** con `▶ PLAY` en marcha, pulsa `● REC EN VIVO` (se pone rojo): cada golpe **se escribe en el paso del secuenciador que esté sonando en ese instante**, con la velocity del golpe. Golpear y componer funciona igual en móvil, tablet y PC — no depende de la pantalla en la que estés.
+  - Un golpe sobre un paso **ya encendido** no lo apaga (comportamiento real de caja de ritmos; para borrar usas el grid del secuenciador).
+  - Todo lo grabado se persiste con el proyecto: aparece en el grid y sale en el export de WAV y MIDI.
+- **FX en vivo por el Trackpad:** los golpes pasan por el filtro/Tape/Eco del Trackpad FX; por defecto el efecto **queda fijado en el último valor al soltar** (estilo latch) y el botón `MOMENTÁNEO` del Trackpad lo vuelve momentáneo estilo pedal CC — maniobra para tocar pads con una mano y sostener el efecto con otra.
+
+---
+
+### 2.4 Presets de Estilo Integrados (8 kits)
 Carga instantánea con un clic (barra superior o catálogo de Proyectos):
 - **Boom Bap Clásico (90 BPM):** bombo espaciado, caja clásica y hi-hats al 22% de swing.
 - **Trap Banger (140 BPM):** palmas en tiempo 3, semicorcheas continuas de hi-hats y 808 pesado.
@@ -98,7 +111,7 @@ Carga instantánea con un clic (barra superior o catálogo de Proyectos):
 
 ---
 
-### 2.4 Record Studio (Grabación con cadena pro)
+### 2.5 Record Studio (Grabación con cadena pro)
 Graba tu voz (o cualquier fuente de micro) **sobre el beat**, con salida WAV PCM 16-bit determinista:
 
 1. **Activa el micro:** pulsa `🔓 Activar Micrófono` (el navegador pedirá permiso la primera vez). Elige el dispositivo en el desplegable si tienes varios.
@@ -121,7 +134,7 @@ Graba tu voz (o cualquier fuente de micro) **sobre el beat**, con salida WAV PCM
 
 ---
 
-### 2.5 Base Library (Bases / Instrumentales)
+### 2.6 Base Library (Bases / Instrumentales)
 Toca tu beat por encima de una instrumental o audio importado:
 
 1. **Importa audio:** `⬇ Importar Bases` acepta MP3, M4A, WAV, Ogg y FLAC **locales** (múltiples archivos a la vez). Se decodifican en el navegador → nada se sube ni se guarda en Git.
@@ -133,7 +146,7 @@ Toca tu beat por encima de una instrumental o audio importado:
 
 ---
 
-### 2.6 Asistente Musical con IA (Multi-Proveedor)
+### 2.7 Asistente Musical con IA (Multi-Proveedor)
 El asistente elige proveedor por prioridad: **proveedor activo con estado online** → **primer proveedor disponible** → **motor heurístico offline**. Gestiónalo todo en la pestaña **Diagnóstico ▸ Proveedores de IA**:
 
 1. **FoZ Local Bridge (recomendado):** el puente local (`python3 scripts/automation/local_bridge.py`) consulta Ollama y devuelve el patrón con CORS configurado. Es la ruta fiable desde la página HTTPS de GitHub Pages.
@@ -152,13 +165,13 @@ El asistente elige proveedor por prioridad: **proveedor activo con estado online
 
 ---
 
-### 2.7 Exportación de Audio y MIDI
+### 2.8 Exportación de Audio y MIDI
 - **Exportación WAV:** renderiza el patrón en el navegador mediante `OfflineAudioContext` produciendo un archivo PCM estándar de 16 bits, 44.1 kHz. En v1.1 además hornea la **base importada** y el estado del **Trackpad FX** (si tienen el horneado activado).
 - **Exportación MIDI:** genera un archivo binario Standard MIDI File Formato 1 (SMF1) con canal 10 General MIDI, velocidad dinámica y división temporal de 480 PPQ, listo para importar en LMMS, FL Studio, Ableton Live o Reaper. Incluye el mapa completo de las 16 voces.
 
 ---
 
-### 2.8 Formato de Proyectos (.foz)
+### 2.9 Formato de Proyectos (.foz)
 - Los proyectos se guardan automáticamente en el almacenamiento local del navegador (`LocalStorage`).
 - Puedes exportar tu proyecto a un archivo `.foz` (JSON estructurado) para compartirlo o llevarlo a otro ordenador.
 - El formato se **versiona** (actualmente esquema **1.1**):
