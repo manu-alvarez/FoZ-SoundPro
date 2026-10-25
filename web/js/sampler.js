@@ -63,6 +63,40 @@ class FoZSampler {
     return s ? s.name : null;
   }
 
+  async importKit(files) {
+    const voiceIds = ["kick","snare","clap","hihat_closed","hihat_open","rimshot","crash","tom_low","tom_mid","cowbell","shaker"];
+    const alias = {kick:"kick",bombo:"kick",snare:"snare",clap:"clap",hihat_closed:"hihat_closed",hihat_open:"hihat_open",hat:"hihat_closed",rim:"rimshot",crash:"crash",tom_low:"tom_low",tom_mid:"tom_mid",cow:"cowbell",cowbell:"cowbell",maracas:"shaker",shaker:"shaker"};
+    let imported = 0, skipped = 0, synthesis = 0;
+    for (const file of (files || [])) {
+      const stem = (file.name || "").toLowerCase().replace(/\.wav$/, "");
+      let vid = null;
+      // 1) carpeta = voiceId (webkitdirectory) — prioridad absoluta
+      const folder = (file.webkitRelativePath || "").split("/")[0].toLowerCase();
+      if (voiceIds.includes(folder)) vid = folder;
+      // 2) nombre de archivo exacto = voiceId
+      else if (voiceIds.includes(stem)) vid = stem;
+      // 3) substring sobre voiceIds (más larga primero, evita que "tom" coma "tom_low")
+      if (!vid) {
+        const ordered = [...voiceIds].sort((a, b) => b.length - a.length);
+        for (const v of ordered) {
+          if (stem.includes(v) || (file.webkitRelativePath || "").includes(v)) { vid = v; break; }
+        }
+      }
+      // 4) alias por stem (entradas de usuario tipo "bombo", "cow", "maracas")
+      if (!vid) {
+        for (const [k, val] of Object.entries(alias)) {
+          if (stem.includes(k)) { vid = val; break; }
+        }
+      }
+      if (vid) {
+        try { await this.loadSample(vid, file); imported++; }
+        catch (e) { skipped++; }
+      }
+    }
+    synthesis = 5;
+    return {imported, skipped, synthesis, total: imported + synthesis};
+  }
+
   clearSample(trackId) {
     this.samples.delete(trackId);
   }

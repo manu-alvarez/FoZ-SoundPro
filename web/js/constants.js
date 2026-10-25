@@ -8,7 +8,7 @@
 
 const FoZConstants = {
   // Identidad
-  APP_VERSION: "1.2.0",
+  APP_VERSION: "1.2.1",
   SCHEMA_VERSION: "1.1.0",
   FORMAT_ID: "foz-soundpro-project",
 

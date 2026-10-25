@@ -302,6 +302,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const inputKitFolder = document.getElementById("input-sample-folder");
+  const btnKitImport = document.getElementById("btn-kit-import");
+  if (btnKitImport && inputKitFolder) {
+    btnKitImport.addEventListener("click", () => inputKitFolder.click());
+    inputKitFolder.addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      try {
+        const res = await sampler.importKit(files);
+        audio.init().then(() => renderSequencerGrid());
+        showToast(`Kit importado (session-only): ${res.imported}/16 voces — ${res.synthesis} mantienen síntesis`);
+      } catch (err) {
+        showToast(`Error al importar kit: ${err.message}`);
+      } finally {
+        renderSequencerGrid();
+      }
+    });
+  }
+
   // =========================================================================
   // CONTROL DE TRANSPORTE Y TIEMPO (BPM, SWING, VOLUME, PASOS)
   // =========================================================================

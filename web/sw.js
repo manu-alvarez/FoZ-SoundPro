@@ -5,7 +5,7 @@
  * de la estación de producción musical sin conexión a Internet.
  */
 
-const CACHE_NAME = "foz-soundpro-v1.2.0";
+const CACHE_NAME = "foz-soundpro-v1.2.1";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
