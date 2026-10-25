@@ -5,7 +5,7 @@
  * de la estación de producción musical sin conexión a Internet.
  */
 
-const CACHE_NAME = "foz-soundpro-v1.1.0";
+const CACHE_NAME = "foz-soundpro-v1.1.2";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
@@ -22,6 +22,11 @@ const ASSETS_TO_CACHE = [
   "./js/ai-assistant.js",
   "./js/app.js",
   "./manifest.json",
+  "./icons/logo.svg",
+  "./icons/logo-header.svg",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/apple-touch-icon-180.png",
 ];
 
 // Instalación: Precargar recursos esenciales
