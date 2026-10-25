@@ -1,5 +1,5 @@
 /**
- * FoZ SoundPro — Constantes Globales de Fabricación (v1.1)
+ * FoZ SoundPro — Constantes Globales de Fabricación (v1.2)
  * ========================================================
  * Único punto de verdad para parámetros musicales, límites y rutas del estudio.
  * Garantiza coherencia entre síntesis en vivo, export WAV offline, export MIDI
@@ -8,7 +8,7 @@
 
 const FoZConstants = {
   // Identidad
-  APP_VERSION: "1.1.0",
+  APP_VERSION: "1.2.0",
   SCHEMA_VERSION: "1.1.0",
   FORMAT_ID: "foz-soundpro-project",
 

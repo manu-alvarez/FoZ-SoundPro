@@ -1953,3 +1953,126 @@ input[type="range"]::-webkit-slider-thumb {
   }
 }
 
+/* ========================================================================= */
+/* v1.2 — PADS: CAJA DE RITMOS 4X4                                           */
+/* ========================================================================= */
+.pads-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pads-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#btn-pads-rec.rec-armed {
+  color: var(--neon-red);
+  border-color: rgba(255, 51, 75, 0.45);
+  box-shadow: 0 0 10px rgba(255, 51, 75, 0.25);
+  font-weight: 800;
+}
+
+.pads-vel-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.pads-vel-group input[type="range"] {
+  flex: 1;
+  accent-color: var(--neon-cyan);
+  cursor: pointer;
+}
+
+.pads-vel-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--neon-cyan);
+  min-width: 38px;
+  text-align: right;
+}
+
+.pads-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  touch-action: manipulation;
+}
+
+.pad {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 64px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--pad-bg, rgba(255, 255, 255, 0.03));
+  background-image: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.04), transparent 70%);
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 6px;
+  overflow: hidden;
+  transition: transform 0.06s ease, box-shadow 0.1s ease, border-color 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.pad:hover {
+  border-color: var(--pad-accent);
+}
+
+.pad:active,
+.pad.pressed {
+  transform: scale(0.94);
+  box-shadow: 0 0 18px var(--pad-accent);
+}
+
+.pad.flash {
+  box-shadow: 0 0 22px var(--pad-accent), inset 0 0 26px color-mix(in srgb, var(--pad-accent) 45%, transparent);
+  border-color: var(--pad-accent);
+}
+
+.pad-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.pad-key {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-dim);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 480px) {
+  .pads-grid {
+    gap: 8px;
+  }
+
+  .pad {
+    min-height: 72px; /* target táctil amplio en móvil */
+  }
+
+  .pad-label {
+    font-size: 9px;
+  }
+}
+

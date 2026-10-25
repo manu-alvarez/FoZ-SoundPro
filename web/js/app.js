@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ai = window.fozAIAssistant;
   const sampler = window.fozSampler;
   const trackpad = window.fozTrackpad;
+  const pads = window.fozPads;
   const baseLib = window.fozBaseLibrary;
   const recStudio = window.fozRecStudio;
 
@@ -111,6 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
     stab_dark:    "#b388ff",
     horn_slap:    "#ffd28a",
   };
+  // Señal de color para módulos fuera de este closure (pads.js pinta cada pad
+  // con el mismo color que su fila del secuenciador; sin duplicar la paleta).
+  window.instrumentColorHint = (instId) => instrumentColorMap[instId] || "#00f2fe";
 
   // =========================================================================
   // RENDERIZADO DEL SECUENCIADOR POR PASOS
@@ -434,6 +438,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentProject = projMgr.loadPresetIntoProject(preset.id);
         seq.setProject(currentProject);
         trackpad.setProject(currentProject);
+        pads.setProject(currentProject);
         updateTransportUI();
         renderSequencerGrid();
         renderPresetsCatalog();
@@ -512,6 +517,39 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectMapY) selectMapY.value = currentProject.padFx.mapY;
     }
   }
+
+  // =========================================================================
+  // PADS — CAJA DE RITMOS 4X4 (GRABACIÓN EN VIVO + QWERTY)
+  // =========================================================================
+  const btnPadsRec = document.getElementById("btn-pads-rec");
+  const inputPadsVelocity = document.getElementById("pads-velocity");
+  const padsVelocityVal = document.getElementById("pads-velocity-val");
+
+  // Cada paso escrito por los pads repinta el grid del secuenciador
+  pads.onStepWritten = () => renderSequencerGrid();
+
+  if (btnPadsRec) {
+    btnPadsRec.addEventListener("click", () => {
+      const armed = pads.setLiveRecord(!pads.liveRecord);
+      btnPadsRec.classList.toggle("rec-armed", armed);
+      btnPadsRec.textContent = armed ? "● REC EN VIVO: ON" : "● REC EN VIVO: OFF";
+      showToast(armed
+        ? "REC en vivo armado: con PLAY en marcha, cada golpe escribe su paso"
+        : "Grabación en vivo desactivada");
+    });
+  }
+
+  if (inputPadsVelocity) {
+    inputPadsVelocity.addEventListener("input", (e) => {
+      const v = pads.setVelocity(parseFloat(e.target.value));
+      if (padsVelocityVal) padsVelocityVal.textContent = `${Math.round(v * 100)}%`;
+    });
+  }
+
+  // Teclado QWERTY de pads (el módulo ignora campos de texto y teclas repetidas)
+  window.addEventListener("keydown", (e) => {
+    if (window.fozPads) window.fozPads.handleKeydown(e);
+  });
 
   // =========================================================================
   // EXPORTACIÓN DE AUDIO Y MIDI (con base y FX horneados)
@@ -1436,6 +1474,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!ai.lastGeneratedResult) return;
     ai.applyToProject(currentProject, ai.lastGeneratedResult);
     seq.setProject(currentProject);
+    pads.setProject(currentProject);
     updateTransportUI();
     renderSequencerGrid();
     showToast("Patrón de IA aplicado al secuenciador.");
@@ -1499,6 +1538,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentProject = imported;
       seq.setProject(currentProject);
       trackpad.setProject(currentProject);
+      pads.setProject(currentProject);
       refreshProjectUI();
       showToast(`Proyecto '${currentProject.name}' importado con éxito.`);
     } catch (err) {
@@ -1513,6 +1553,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentProject = projMgr.createNewProject("Nuevo Beat FoZ", 90);
       seq.setProject(currentProject);
       trackpad.setProject(currentProject);
+      pads.setProject(currentProject);
       refreshProjectUI();
       showToast("Nuevo proyecto en blanco creado.");
     }
@@ -1543,6 +1584,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentProject = projMgr.loadPresetIntoProject(preset.id);
         seq.setProject(currentProject);
         trackpad.setProject(currentProject);
+        pads.setProject(currentProject);
         refreshProjectUI();
         showToast(`Preset cargado: ${preset.name}`);
         document.getElementById("nav-btn-sequencer").click();
@@ -1620,6 +1662,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderPresetQuickBar();
   updateTransportUI();
   renderSequencerGrid();
+  pads.setProject(currentProject); // construye el grid 4x4 (el hint de colores ya existe aquí)
   syncTrackpadUi();
   renderBaseList();
   refreshProjectUI();
@@ -1629,5 +1672,5 @@ document.addEventListener("DOMContentLoaded", () => {
     projMgr.saveCurrentProject(currentProject);
   });
 
-  console.log("FoZ SoundPro v1.1 — Beatmaker AI Studio inicializado correctamente (16 voces, Trackpad FX, Record Studio, Base Library).");
+  console.log("FoZ SoundPro v1.2 — Beatmaker AI Studio inicializado (16 voces, Pads/Caja de Ritmos, Trackpad FX, Record Studio, Base Library).");
 });

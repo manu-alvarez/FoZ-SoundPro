@@ -17,7 +17,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DIST_DIR = PROJECT_ROOT / "dist"
-ZIP_NAME = "FoZ_SoundPro_Portable_v1.1.zip"
+ZIP_NAME = "FoZ_SoundPro_Portable_v1.2.zip"
 TARGET_ZIP = DIST_DIR / ZIP_NAME
 CHECKSUM_FILE = DIST_DIR / f"{ZIP_NAME}.sha256"
 
