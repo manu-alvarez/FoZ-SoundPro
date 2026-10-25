@@ -15,7 +15,11 @@
  * - El Trackpad FX (filtro/tape/eco) procesa los golpes en vivo por su bus;
  *   por defecto el FX queda aplicado al soltar (latch) y el botón
  *   MOMENTÁNEO del trackpad lo vuelve momentáneo estilo pedal CC.
- * - Salida MIDI (Web MIDI) queda como Fase 9.3 futura: no se implementa aquí.
+ * - Fase 9.3 (hoy): Salida MIDI (Web MIDI API). Implementación opcional:
+ *   `tryMidiAccess()` detecta `navigator.requestMIDIAccess()` (solo Chrome/Edge);
+ *   `sendMidiNote()` envía noteOn/noteOff al primer output MIDI disponible.
+ *   Limitación honesta: Firefox/Safari no soportan Web MIDI API de serie; la
+ *   función no se activa en esos navegadores (documentado en docs/MAGENTA_JS.md).
  */
 
 class FoZPads {
@@ -172,6 +176,42 @@ class FoZPads {
     if (!this.project || !this.project.tracks || !this.project.tracks[idx]) return;
     e.preventDefault();
     this.hit(this.project.tracks[idx].id);
+  }
+
+  /* =====================================================================
+     FASE 9.3 — Web MIDI API (opcional, solo Chrome/Edge con soporte)
+     Requiere navigator.requestMIDIAccess() disponible.
+     Si el navegador no lo soporta, no se activa (limitación documentada).
+     ===================================================================== */
+  async tryMidiAccess() {
+    if (typeof navigator === "undefined" || !navigator.requestMIDIAccess) {
+      return { supported: false, reason: "Web MIDI API no disponible en este navegador (requiere Chrome/Edge)." };
+    }
+    try {
+      const access = await navigator.requestMIDIAccess({ sysex: false });
+      const outputs = Array.from(access.outputs.values());
+      this.midiOutputs = outputs;
+      return { supported: true, outputs: outputs.length, reason: null };
+    } catch (err) {
+      return { supported: false, reason: "Acceso MIDI denegado: " + (err && err.message ? err.message : err) };
+    }
+  }
+
+  async sendMidiNote(voiceId, velocity = 0.85) {
+    if (!this.midiOutputs || this.midiOutputs.length === 0) return;
+    const output = this.midiOutputs[0];
+    const noteMap = { kick: 36, snare: 38, clap: 39, hihat_closed: 42, hihat_open: 46,
+                     bass808: 36, rimshot: 37, crash: 49, ride: 51, tom_low: 41,
+                     tom_mid: 45, cowbell: 56, snap_trap: 39, shaker: 70,
+                     stab_dark: 39, horn_slap: 41 };
+    const note = noteMap[voiceId] || 38;
+    const vel = Math.max(1, Math.min(127, Math.round(velocity * 127)));
+    try {
+      output.send([0x90, note, vel], 0); // noteOn
+      setTimeout(() => output.send([0x80, note, 0], 0), 200); // noteOff 200ms
+    } catch (e) {
+      // Silenciosamente ignoramos errores de MIDI en vivo (no rompemos)
+    }
   }
 }
 
