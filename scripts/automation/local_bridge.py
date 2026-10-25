@@ -246,6 +246,26 @@ class FoZBridgeHandler(BaseHTTPRequestHandler):
       self.wfile.write(json.dumps(payload, indent=2).encode("utf-8"))
       return
 
+    # Portada amable si alguien abre el puente en el navegador: la raíz de esta
+    # API no es el estudio. Documentamos los endpoints y avisamos de dónde está
+    # la interfaz real.
+    if self.path in ("/", "/index.html"):
+      landing = {
+          "name": "FoZ Local Bridge",
+          "bridgeVersion": BRIDGE_VERSION,
+          "description": "Puente API local entre FoZ SoundPro y Ollama. Esta URL es una interfaz de servicio (REST), no la web del estudio.",
+          "ollamaTarget": OLLAMA_BASE_URL,
+          "endpoints": {
+              "GET /api/status": "Estado del puente, Ollama destino y modelos locales (JSON).",
+              "POST /api/generate-pattern": "Genera un patrón de 16 voces: {prompt, genre, bpm, model?}.",
+              "POST /api/pull": "Descarga un modelo en Ollama: {model, host?}.",
+          },
+          "studio": "El estudio se abre con start_mac.sh / start_windows.bat / start_linux.sh (normalmente http://127.0.0.1:9200) o en la página publicada del proyecto.",
+      }
+      self._set_cors_headers(200)
+      self.wfile.write(json.dumps(landing, indent=2).encode("utf-8"))
+      return
+
     self._set_cors_headers(404)
     self.wfile.write(json.dumps({"error": "Endpoint no encontrado"}).encode("utf-8"))
 
