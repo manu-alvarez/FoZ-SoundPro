@@ -30,6 +30,7 @@ INCLUDE_PATHS = [
     "config",
     "start_windows.bat",
     "start_mac.sh",
+    "start_linux.sh",
     "README.md",
     "AGENTS.md",
 ]
