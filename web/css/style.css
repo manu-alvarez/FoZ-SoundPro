@@ -22,6 +22,7 @@
 
   --neon-cyan: #00f2fe;
   --neon-cyan-glow: rgba(0, 242, 254, 0.35);
+  --neon-magenta: #fe0369;          /* tono de marca del logo (logo.svg) */
   --neon-pink: #fe007a;
   --neon-pink-glow: rgba(254, 0, 122, 0.35);
   --neon-amber: #ffb800;
@@ -102,16 +103,21 @@ body.studio-app {
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  background: linear-gradient(90deg, #ffffff, var(--neon-cyan));
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-subtitle {
   font-size: 10px;
-  color: var(--text-muted);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Grupo Central de Transporte */
