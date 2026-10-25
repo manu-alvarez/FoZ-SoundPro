@@ -9,7 +9,7 @@ Este documento explica cómo publicar la aplicación web de **FoZ SoundPro Beatm
 La carpeta [`web/`](file:///Users/manu/Desktop/FoZ_SoundPro/web) contiene todos los recursos de la estación musical empaquetados de forma autocontenida:
 - `index.html`: Estructura semántica completa y accesible.
 - `css/style.css`: Sistema de diseño profesional oscuro sin dependencias externas de CDN.
-- `js/`: Motores de audio Web Audio API, sintetizadores de 7 instrumentos, generador binario MIDI SMF1, secuenciador con lookahead, asistente musical heurístico y gestor de proyectos.
+- `js/`: Motores de audio Web Audio API, sintetizadores de 16 voces, trackpad FX XY, record studio (captura PCM), base library, generador binario MIDI SMF1, secuenciador con lookahead, asistente musical heurístico y gestor de proyectos con migrador de esquema.
 - `manifest.json` y `sw.js`: Soporte de Progressive Web App (PWA) e instalación en escritorio o móvil con caché offline.
 - `demo_project.foz`: Proyecto de demostración cargable de inmediato.
 

@@ -1,4 +1,4 @@
-# FoZ SoundPro — Manual de Usuario
+# FoZ SoundPro — Manual de Usuario (v1.1 The Expansion)
 
 Guía completa para la producción musical asistida por IA con FoZ SoundPro Beatmaker Studio.
 
@@ -19,53 +19,116 @@ start_windows.bat
 ```
 *Nota:* Si tienes Python instalado, iniciará el servidor en un puerto libre a partir de 9200. Si no tienes Python, abrirá `web/index.html` directamente en tu navegador por defecto.
 
+### En la Web (sin instalación):
+Abre directamente [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/).
+
 ---
 
-## 2. Módulos del Estudio
+## 2. Módulos del Estudio (7 pestañas)
 
 ### 2.1 Secuenciador por Pasos (Beatmaker)
-- **16 Pasos por compás:** Dividido visualmente en 4 tiempos de 4 semicorcheas con sombreado alterno.
-- **Instrumentos disponibles:**
-  1. *Bombo (Kick 808):* Barrido sub-grave con transitorio de ataque.
-  2. *Caja (Snare):* Doble capa (cuerpo tonal en 190 Hz + ruido de bordones).
-  3. *Palmas (Clap):* Micro-ráfagas triples espaciadas por 11 ms.
-  4. *Hi-Hat Cerrado:* Textura metálica de alta frecuencia con caída ultra rápida (55 ms).
-  5. *Hi-Hat Abierto:* Cola de resonancia abierta (350 ms).
-  6. *Sub-Bajo 808:* Subgrave sostenido con caída afinada.
-  7. *Aro (Rimshot):* Golpe seco en madera/metal para síncopas.
-- **Controles por pista:**
-  - `M`: Silenciar pista (Mute).
-  - `S`: Pista en solo (Solo).
-  - Slider de volumen individual.
-  - Clic en el nombre del instrumento para escuchar su sonido inmediatamente.
+- **16 voces sintéticas** (todas generadas por Web Audio API, sin licencias ni archivos externos):
+  1. *Bombo (Kick 808):* barrido sub-grave con transitorio de ataque.
+  2. *Caja (Snare):* doble capa (cuerpo tonal en 190 Hz + ruido de bordones).
+  3. *Palmas (Clap):* micro-ráfagas triples espaciadas por 11 ms.
+  4. *Hi-Hat Cerrado:* textura metálica con caída ultra rápida (55 ms).
+  5. *Hi-Hat Abierto:* cola de resonancia abierta (350 ms).
+  6. *Sub-Bajo 808:* subgrave sostenido con caída afinada.
+  7. *Aro (Rimshot):* golpe seco para síncopas.
+  8. *Crash Cymbal:* impacto de plato con barrido de ruido y deferescencia larga.
+  9. *Ride Cymbal:* ping metálico con cola larga y ligera afinación en movimiento.
+  10. *Tom Grave / Tom Medio:* toms con barrido descendente de tono.
+  11. *Cowbell:* par de osciladores cuadrados desafinados (estilo 808).
+  12. *Snap Trap:* dedo chasqueado ultra-corto con ruido soplado para traps modernos.
+  13. *Shaker:* agitación granular de 16 micro-ráfagas.
+  14. *Stab Dark:* acorde tipo teclado (síncopa oscura sobre la clave).
+  15. *Horn Slap:* slap de metales sintético para grooves funk.
+- **Longitud del patrón:** 16, 32 o 64 pasos (selector `PASOS` de la barra superior).
+- **Velocity por paso:** mantén `Shift` y haz clic sobre un paso activo para ciclar *suave (0.5) → medio (0.85) → forte (1.0)*; los pasos suaves se pintan más apagados y los fuertes brillan más.
+- **Color por instrumento:** cada fila y sus pasos iluminados usan su color propio para leer el patrón de un vistazo.
+- **Sample Studio (📂):** pulsa el botón de carpeta de cualquier fila para cargar una **muestra local** (WAV/MP3/M4A/OGG/FLAC) y dispararla como una voz más, respetando velocity y volumen. La muestra vive solo en la memoria de esta sesión (no queda dentro del `.foz`).
+- **Controles por fila:**
+  - Clic en el *nombre* para escuchar la voz en preview.
+  - `📂`: cargar muestra local · `✕`: quitar muestra y volver a la voz sintética.
+  - `M`: Silenciar pista (Mute) · `S`: Pista en solo (Solo).
+  - Slider de volumen individual (0 – 1.2).
 - **Controles globales de transporte:**
-  - `PLAY / PAUSE`: Reproducción cíclica continua (Atajo: tecla **Espacio**).
-  - `STOP`: Detener y reiniciar el cursor al paso 1.
-  - `BPM`: Ajuste de tempo (40 a 240 BPM).
-  - `SWING`: Factor de arrastre rítmico (0% a 75%) en semicorcheas impares.
-  - `MASTER`: Volumen de salida master con compresor anti-saturación.
+  - `PLAY / PAUSE`: reproducción cíclica continua (Atajo: tecla **Espacio**).
+  - `STOP`: detener y reiniciar el cursor al paso 1.
+  - `BPM`: ajuste de tempo (30 a 300 BPM).
+  - `SWING`: factor de arrastre rítmico (0% a 75%) en semicorcheas impares.
+  - `PASOS`: 16 / 32 / 64.
+  - `MASTER`: volumen de salida master con compresor anti-saturación.
 
 ---
 
-### 2.2 Presets de Estilo Integrados
-Puedes cargar instantáneamente ritmos profesionales preconfigurados:
-- **Boom Bap 90:** Bombo espaciado, caja clásica en tiempos 2 y 4, hi-hats con swing al 22%.
-- **Trap 140:** Palmas en tiempo 3, semicorcheas continuas en hi-hats y bajo 808 pesado.
-- **Drill 142:** Ritmo sincopado de hi-hats característico de UK/NY y caja retardada.
-- **Lo-Fi 85:** Swing acentuado al 35%, bombo sutil y aro de caja.
+### 2.2 Trackpad FX (Pad XY de efectos)
+El pad multidimensional aplica FX al bus master del beat **en tiempo real**:
+
+- **Eje X (horizontal):** filtro `Lowpass` (apaga los agudos, efecto "bajo el agua") o `Highpass` (apaga los graves, efecto "walkie-talkie"), mapeo exponencial 120 Hz → 18 kHz para máxima resolución en graves.
+- **Eje Y (vertical):** elige el efecto en el desplegable `-MUX Y`:
+  - *Tape Drive:* saturación analógica progresiva (calidez y grueso).
+  - *Eco:* eco corto (segundo) sincronizado automáticamente al BPM del proyecto (corchea).
+- **Interacción:**
+  - Funciona con ratón (arrastrar) y con **multitáctil** en pantallas táctiles (Pointer Events, sin scroll accidental).
+  - **Doble toque en el centro** del pad (o botón `RESET`): vuelve al estado neutro (filtro abierto, sin FX).
+  - `MOMENTÁNEO:` al soltar el pad, el efecto vuelve a neutro (estilo pedal CC de MIDI). Con el botón apagado, el pad se queda en el último valor al soltar.
+  - `HORNEAR EN WAV:` si está activo, el estado del pad se graba "dentro" del archivo WAV exportado.
+- **Presets de estilo:** `Clean`, `Trap Lush` (lowpass ~2.9 kHz + eco), `Boom Bap Dusty` (lowpass ~1 kHz + tape) y `Drill Dark` (lowpass ~0.6 kHz + tape fuerte).
+- El estado del pad se guarda con el proyecto y el eco se re-sincroniza al cambiar el BPM.
 
 ---
 
-### 2.3 Grabador de Voz (Vocal Studio)
-- Permite registrar tomas vocales, coros o ideas rítmicas usando el micrófono del equipo.
-- Muestra osciloscopio en tiempo real sobre el lienzo de visualización.
-- Incluye temporizador de grabación.
-- Al terminar, permite reproducir la toma grabada y descargarla como archivo de audio (`.webm` / `.wav`).
+### 2.3 Presets de Estilo Integrados (8 kits)
+Carga instantánea con un clic (barra superior o catálogo de Proyectos):
+- **Boom Bap Clásico (90 BPM):** bombo espaciado, caja clásica y hi-hats al 22% de swing.
+- **Trap Banger (140 BPM):** palmas en tiempo 3, semicorcheas continuas de hi-hats y 808 pesado.
+- **Drill Pattern (142 BPM):** hi-hats sincopados UK/NY y caja retardada.
+- **Lo-Fi Chill Hop (85 BPM):** swing acentuado al 35%, bombo sutil y aro.
+- **Trap Dark Snap (140 BPM):** *nuevo v1.1* — snap ultra-corto, crash de ataque, shaker envolvente y 808.
+- **Drill Kheap Dark (142 BPM):** *nuevo v1.1* — toms graves sincopados, ride fantasma y 808 pesado.
+- **Lo-Fi Dusty Stabs (78 BPM):** *nuevo v1.1* — stabs de teclado oscuros con swing arrastrado.
+- **Cowbell Bounce (96 BPM):** *nuevo v1.1* — cowbell sincopado, slap de metales y groove funk.
 
 ---
 
-### 2.4 Asistente Musical con IA Local
-El asistente opera en dos modalidades transparentes para el usuario:
+### 2.4 Record Studio (Grabación con cadena pro)
+Graba tu voz (o cualquier fuente de micro) **sobre el beat**, con salida WAV PCM 16-bit determinista:
+
+1. **Activa el micro:** pulsa `🔓 Activar Micrófono` (el navegador pedirá permiso la primera vez). Elige el dispositivo en el desplegable si tienes varios.
+2. **Ajusta la cadena de voz:**
+   - *HPF:* filtro pasa-altos para limpiar rumble (80 Hz recomendado para voz).
+   - *EQ de 3 bandas* (gravos 180 Hz, medios 1.2 kHz, agudos 3.6 kHz, ±12 dB).
+   - *Compresor:* `Off / Suave (3:1) / Rap (6:1) / Agresivo (8:1)`.
+   - *Reverb* (sala sintética) y *Eco* (240 ms) por sends.
+   - *VU + osciloscopio:* vigila el nivel; el meter se vuelve rojo si saturas.
+3. **Monitor:** botón `MONITOR` para oír tu voz por los altavoces. **Usa auriculares** siempre que el micro esté activo para evitar el acople (la voz del altavoz volviendo a entrar al micro).
+4. **Qué grabar:** `Voz + Beat` (busca la mezcla de micro y beat), `Solo voz` (micro limpio) o `Solo beat` (sin micro).
+5. **Pre-roll:** elige cuenta de 0, 1 o 2 compases antes de que arranque la grabación (metrónomo audible en la cuenta).
+6. **Pulsa `GRABAR`:** la cuenta aparece en pantalla, el beat arranca solo en el pulso exacto y se captura audio PCM por bloques.
+7. **Pulsa `DETENER`:** obtienes la toma como WAV con:
+   - **Ajuste fino voz/beat (±150 ms):** deslizador para nudge si tu entrada tiene latencia; se aplica sobre la toma guardada.
+   - **Gate de toma (`GATE TOMA`):** noise gate aplicado offline: silencia el fondo entre frases de forma reversible y determinista.
+8. **Tomas:** se guardan en IndexedDB del navegador (lista con reproductor, tamaño, duración, aviso de clipping y descarga `⬇ WAV`). Puedes borrarlas individualmente.
+
+*Detalles técnicos honestos:* la captura es por PCM (ScriptProcessorNode) para que el archivo sea **exactamente igual en macOS y Windows** (el MediaRecorder del sistema se guarda como respaldo cuando la captura PCM no está disponible). El pre-roll se sincroniza con el reloj de audio, no con el de sistema, para evitar deriva.
+
+---
+
+### 2.5 Base Library (Bases / Instrumentales)
+Toca tu beat por encima de una instrumental o audio importado:
+
+1. **Importa audio:** `⬇ Importar Bases` acepta MP3, M4A, WAV, Ogg y FLAC **locales** (múltiples archivos a la vez). Se decodifican en el navegador → nada se sube ni se guarda en Git.
+2. **Catálogo M3U:** `📃 Importar Manifiesto .m3u/.m3u8` crea un catálogo con títulos y orden, y enlaza las pistas cuyo nombre coincide con las bases importadas. Los streaming remotos (listas HLS) no son compatibles: la app es 100% offline.
+3. **Base activa:** marca la base con el selector circular de la lista. La base activa arranca junto al transporte (`PLAY`) y se detiene con él.
+4. **Mezcla:** volumen (0 – 1.5), fade-in de arranque, fade-out en export y `Buclar la base` al terminar.
+5. **Preview:** botón `▶ Escuchar` para escuchar la base sin el secuenciador.
+6. **Horneado en export:** al exportar el WAV del patrón, la base activa se mezcla en la renderización offline (con su ganancia y fades).
+
+---
+
+### 2.6 Asistente Musical con IA Local
+El asistente opera en dos modalidades transparentes:
 
 1. **Modo Ollama Local (cuando el puente está activo):**
    - Se comunica con el modelo local `qwen3.5:4b` o `llamusic/llamusic:latest` a través de `http://127.0.0.1:8765`.
@@ -74,19 +137,30 @@ El asistente opera en dos modalidades transparentes para el usuario:
    - Si Ollama no está instalado o el puente está desconectado, el botón de generación sigue funcionando sin interrupciones.
    - Aplica matrices de probabilidad de teoría musical para construir ritmos coherentes del estilo elegido.
 3. **Acciones del Asistente:**
-   - *Previsualización:* Muestra un mini-mapa de los 16 pasos por instrumento y la explicación musical.
-   - *Aplicar al Secuenciador:* Transfiere el ritmo generado directamente a la sesión activa.
-   - *Descargar como MIDI:* Exporta el patrón propuesto como archivo `.mid` sin sobrescribir tu trabajo actual.
+   - *Previsualización:* muestra un mini-mapa de los 16 pasos por instrumento y la explicación musical.
+   - *Aplicar al Secuenciador:* transfiere el ritmo generado directamente a la sesión activa.
+   - *Descargar como MIDI:* exporta el patrón propuesto como `.mid` sin sobrescribir tu trabajo actual.
 
 ---
 
-### 2.5 Exportación de Audio y MIDI
-- **Exportación WAV:** Renderiza el patrón en el navegador mediante `OfflineAudioContext` produciendo un archivo PCM estándar de 16 bits, 44.1 kHz, reproducible en cualquier dispositivo sin necesidad de software adicional.
-- **Exportación MIDI:** Genera un archivo binario Standard MIDI File Formato 1 (SMF1) con canal 10 General MIDI, velocidad dinámica y división temporal de 480 PPQ, listo para importar en LMMS, FL Studio, Ableton Live o Reaper.
+### 2.7 Exportación de Audio y MIDI
+- **Exportación WAV:** renderiza el patrón en el navegador mediante `OfflineAudioContext` produciendo un archivo PCM estándar de 16 bits, 44.1 kHz. En v1.1 además hornea la **base importada** y el estado del **Trackpad FX** (si tienen el horneado activado).
+- **Exportación MIDI:** genera un archivo binario Standard MIDI File Formato 1 (SMF1) con canal 10 General MIDI, velocidad dinámica y división temporal de 480 PPQ, listo para importar en LMMS, FL Studio, Ableton Live o Reaper. Incluye el mapa completo de las 16 voces.
 
 ---
 
-### 2.6 Formato de Proyectos (.foz)
+### 2.8 Formato de Proyectos (.foz)
 - Los proyectos se guardan automáticamente en el almacenamiento local del navegador (`LocalStorage`).
 - Puedes exportar tu proyecto a un archivo `.foz` (JSON estructurado) para compartirlo o llevarlo a otro ordenador.
+- El formato se **versiona** (actualmente esquema **1.1**):
+  - Proyectos antiguos v1.0 se cargan con un **migrador automático no destructivo**: tus pasos se conservan tal cual y las pistas nuevas (crash, ride, toms, cowbell, snap, shaker, stab, horn) aparecen vacías.
+  - El estado del Trackpad FX y la metadata de la sesión viajan dentro del proyecto.
 - En la pestaña **Proyectos**, pulsa *Importar Archivo .foz* para cargar cualquier proyecto guardado previamente.
+
+---
+
+## 3. Consejos rápidos de producción
+- **Swing + Tape:** activa el modulo Lo-Fi 85 con el trackpad en `Lowpass ~1 kHz + Tape` para un lo-fi creíble sin plugins.
+- **Risers de trap:** sostén el pad en la esquina superior-izquierda con `Eco` activado mientras grabas (momentáneo como pedal).
+- **Re-mezcla de tu beat importado:** carga tu base, activa `Solo beat` en Record Studio y graba 30 s del beat con los FX horneados para previsualizar cómo sonará exportado.
+- **Nudge:** si tu voz suena siempre "tarde" respecto al beat, prueba -30/-50 ms en `Ajuste fino` y escucha la toma siguiente: los valores se recuerdan entre sesiones.

@@ -32,31 +32,41 @@ start_windows.bat
 
 ---
 
-## 2. Módulos y Capacidades Implementadas
+## 2. Módulos y Capacidades Implementadas (v1.1 The Expansion)
 
-- **🥁 Secuenciador por Pasos (16 pasos en 4/4):**
-  - Síntesis Web Audio API nativa para 7 instrumentos: Bombo (Kick 808), Caja (Snare), Palmas (Clap), Hi-Hat Cerrado, Hi-Hat Abierto, Sub-Bajo 808 y Aro (Rimshot).
-  - Controles de Mute (M), Solo (S) y volumen independiente por pista.
-  - Planificador de audio de alta precisión con técnica lookahead (sin drift ni desincronización).
-  - Control de tempo (BPM) y Swing ajustable en tiempo real.
-  - Presets listos para usar: *Boom Bap 90*, *Trap 140*, *UK Drill 142* y *Lo-Fi 85*.
+- **🥁 Secuenciador por Pasos (16 voces · 16/32/64 pasos):**
+  - Síntesis Web Audio API nativa para **16 voces** (sin licencias ni assets externos): Bombo (Kick 808), Caja (Snare), Palmas (Clap), Hi-Hat Cerrado, Hi-Hat Abierto, Sub-Bajo 808, Aro (Rimshot), **Crash, Ride, Tom Grave, Tom Medio, Cowbell, Snap Trap, Shaker, Stab Dark y Horn Slap**.
+  - Velocity por paso (Shift+Clic cicla suave/medio/forte), color por instrumento en pantalla, Mute/Solo y volumen por pista.
+  - **Sample Studio:** carga una muestra local (WAV/MP3/M4A/OGG/FLAC) en cualquier pista y dispara la voz personalizada como el resto (solo vive en memoria de sesión).
+  - Longitud de patrón 16/32/64 pasos, BPM 30–300 y Swing 0–75 % con lookahead scheduling (sin drift).
+  - Presets listos para usar: *Boom Bap 90*, *Trap Banger 140*, *Drill 142*, *Lo-Fi 85* + 4 kits nuevos v1.1: *Trap Dark Snap 140*, *Drill Kheap Dark 142*, *Lo-Fi Dusty Stabs 78* y *Cowbell Bounce 96*.
+- **🕹️ Trackpad FX (pad XY en tiempo real):**
+  - Eje X = filtro Lowpass/Highpass (120 Hz → 18 kHz) y Eje Y = saturación *Tape Drive* o *Eco de corchea* sincronizado al BPM.
+  - Multitáctil (Pointer Events), modo momentáneo estilo pedal CC, doble toque en el centro para reset y presets por estilo (Clean / Trap Lush / Boom Bap Dusty / Drill Dark).
+  - El estado del pad se guarda en el proyecto y puede hornearse en el export WAV.
 - **💾 Exportación de Audio WAV Real:**
   - Renderizado directo en navegador mediante `OfflineAudioContext`.
-  - Generación de archivos PCM estéreo de 16 bits a 44.1 kHz conforme al estándar RIFF/WAVE.
+  - Generación de archivos PCM estéreo de 16 bits a 44.1 kHz conforme al estándar RIFF/WAVE (con base importada y FX del trackpad horneados).
 - **🎵 Generación y Exportación MIDI Real:**
-  - Codificador binario puro de Standard MIDI File (SMF Formato 1).
+  - Codificador binario puro de Standard MIDI File (SMF Formato 1) para las 16 voces.
   - Eventos de nota asignados al canal 10 de General MIDI (Percusión) con división de 480 PPQ.
-- **🎙️ Grabador Vocal (Vocal Studio):**
-  - Grabación con micrófono de tomas vocales o ideas rítmicas.
-  - Visualización de onda (osciloscopio) en tiempo real en canvas.
-  - Reproductor integrado y descarga directa de la toma de audio.
+- **🎙️ Record Studio (grabación vocal con beat y cadena pro):**
+  - Cadena de voz profesional: filtro pasa-altos, EQ de 3 bandas, compresor (presets *Rap/Suave/Agresivo*), reverb sintética y eco por sends, monitor con anti-acople y VU + osciloscopio.
+  - Captura PCM determinista → **WAV 16-bit idéntico en macOS y Windows** (MediaRecorder queda como respaldo del sistema).
+  - Pre-roll metronómico de 0/1/2 compases sincronizado por reloj de audio, ajuste fino voz/beat (±150 ms) y noise gate offline.
+  - Tomas persistentes en IndexedDB con reproductor, descarga y borrado integrado.
+- **💿 Base Library (bases / instrumentales importadas):**
+  - Importa MP3/M4A/WAV/Ogg/FLAC **locales** como instrumental sobre el beat: bucle, ganancia y fades configurables.
+  - Arranque sincronizado con el transporte del secuenciador y horneado determinista en el export WAV.
+  - Manifiestos `.m3u/.m3u8` como catálogo local (empareja por nombre de archivo; sin streaming remoto, modo offline).
 - **🤖 Asistente Musical con IA Local (Dual-Mode):**
   - *Modo Ollama Local:* Conexión segura con modelos locales (`qwen3.5:4b` o `llamusic/llamusic:latest`) mediante `scripts/automation/local_bridge.py`.
   - *Modo Heurístico Autónomo:* Generador rítmico basado en teoría musical que funciona al 100% sin conexión si Ollama no está presente.
   - Previsualización gráfica en mini-grid y botón para aplicar directamente al secuenciador.
-- **📁 Gestión de Proyectos (.foz):**
+- **📁 Gestión de Proyectos (.foz esquema 1.1):**
   - Persistencia automática en `LocalStorage`.
-  - Exportación e importación de proyectos en formato JSON versionado (`.foz`).
+  - Exportación e importación de proyectos JSON versionados (`.foz`) con **migrador automático v1.0 → 1.1** (los archivos antiguos cargan sin perder pasos; las voces nuevas aparecen vacías).
+  - Estado del Trackpad FX persistido por proyecto; los buffers de muestras nunca se serializan.
   - Proyecto de demostración incluido (`workspace/projects/demo_trap_beat.foz`).
 
 ---
@@ -66,9 +76,9 @@ start_windows.bat
 Para trasladar la estación a otro equipo Windows sin instalar herramientas de compilación ni entornos pesados:
 
 1. El archivo empaquetado y verificado se encuentra en:
-   [`dist/FoZ_SoundPro_Portable_v1.0.zip`](dist/FoZ_SoundPro_Portable_v1.0.zip) (~101 KB).
+   [`dist/FoZ_SoundPro_Portable_v1.1.zip`](dist/FoZ_SoundPro_Portable_v1.1.zip).
 2. Suma criptográfica de integridad:
-   [`dist/FoZ_SoundPro_Portable_v1.0.zip.sha256`](dist/FoZ_SoundPro_Portable_v1.0.zip.sha256).
+   [`dist/FoZ_SoundPro_Portable_v1.1.zip.sha256`](dist/FoZ_SoundPro_Portable_v1.1.zip.sha256).
 3. Guía completa de uso en Windows: ver [docs/PAQUETE_WINDOWS.md](docs/PAQUETE_WINDOWS.md).
 
 ---

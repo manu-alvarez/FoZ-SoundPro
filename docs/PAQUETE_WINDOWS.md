@@ -7,7 +7,7 @@ Esta guía detalla los pasos para trasladar y ejecutar **FoZ SoundPro Beatmaker 
 ## 1. Características del Paquete Portátil
 
 El paquete se encuentra empaquetado en:
-`dist/FoZ_SoundPro_Portable_v1.0.zip` (acompañado de su suma criptográfica `FoZ_SoundPro_Portable_v1.0.zip.sha256`).
+`dist/FoZ_SoundPro_Portable_v1.1.zip` (acompañado de su suma criptográfica `FoZ_SoundPro_Portable_v1.1.zip.sha256`).
 
 - **Coste:** 0 €.
 - **Sin instaladores pesados ni dependencias de compilación:** No requiere Node.js, npm, Visual Studio ni Git en el ordenador de destino.
@@ -19,7 +19,7 @@ El paquete se encuentra empaquetado en:
 
 ## 2. Instrucciones de Traslado y Puesta en Marcha
 
-1. Copia el archivo `FoZ_SoundPro_Portable_v1.0.zip` en el ordenador Windows (mediante pendrive USB, red local o descarga directa).
+1. Copia el archivo `FoZ_SoundPro_Portable_v1.1.zip` en el ordenador Windows (mediante pendrive USB, red local o descarga directa).
 2. Haz clic derecho sobre el archivo ZIP y selecciona **Extraer todo...** en una carpeta de tu preferencia (ejemplo: `C:\FoZ_SoundPro` o en el Escritorio).
 3. Entra en la carpeta extraída y haz doble clic sobre:
    ```cmd

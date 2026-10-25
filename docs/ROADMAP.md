@@ -8,4 +8,5 @@
 - [x] Fase 5: generación estructurada de patrones rítmicos y exportación SMF1 en canal GM 10.
 - [x] Fase 6: asistente musical interactivo con previsualización y aplicación a la sesión.
 - [x] Fase 7: automatización, puente local (`local_bridge.py`) y suite unificada de pruebas (6/6 fases).
-- [x] Fase 8: paquete portátil verificado (`FoZ_SoundPro_Portable_v1.0.zip`), lanzadores dinámicos para Windows y macOS y guías de despliegue en GitHub Pages.
+- [x] Fase 8: paquete portátil verificado (`FoZ_SoundPro_Portable_v1.0.zip`, renombrado a `_v1.1` en la siguiente fase), lanzadores dinámicos para Windows y macOS y guías de despliegue en GitHub Pages.
+- [x] Fase 9 (v1.1 The Expansion): kit de 16 voces sintéticas premium, Trackpad FX XY con presets y horneado en WAV, Record Studio (cadena de voz pro, pre-roll metronómico, captura PCM→WAV determinista y tomas en IndexedDB), Base Library (MP3/M3U locales sincronizados al transporte), Sample Studio por pista y esquema de proyecto 1.1 con migrador no destructivo.
