@@ -1,8 +1,12 @@
 /**
- * FoZ SoundPro — Master Application Controller
- * ============================================
- * Conecta la interfaz de usuario con los motores de audio, MIDI, secuenciador,
- * asistente IA y gestor de proyectos.
+ * FoZ SoundPro — Master Application Controller (v1.1)
+ * ===================================================
+ * Conecta la interfaz con todos los módulos del estudio:
+ *  - Secuenciador de 16 voces (con muestras locales por pista)
+ *  - FX Trackpad (bus de efectos XY)
+ *  - Record Studio (grabación con beat, cadena pro, tomas WAV en IndexedDB)
+ *  - Base Library (bases importadas MP3/M4U sincronizadas al transporte)
+ *  - Asistente IA, Gestor de Proyectos y Diagnóstico
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -12,12 +16,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const projMgr = window.fozProjectManager;
   const midi = window.fozMidiEngine;
   const ai = window.fozAIAssistant;
+  const sampler = window.fozSampler;
+  const trackpad = window.fozTrackpad;
+  const baseLib = window.fozBaseLibrary;
+  const recStudio = window.fozRecStudio;
 
   // 2. Estado local de la aplicación
   let currentProject = projMgr.loadCurrentProject();
   seq.setProject(currentProject);
+  trackpad.setProject(currentProject);
 
-  // 3. Elementos del DOM
+  // 3. Elementos del DOM — Transporte
   const btnPlayPause = document.getElementById("btn-play-pause");
   const btnStop = document.getElementById("btn-stop");
   const btnMetronome = document.getElementById("btn-metronome");
@@ -29,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const rangeSwing = document.getElementById("range-swing");
   const labelSwingVal = document.getElementById("label-swing-val");
   const rangeMasterVol = document.getElementById("range-master-vol");
+  const selectStepsCount = document.getElementById("select-steps-count");
 
   const masterVisualizer = document.getElementById("master-visualizer");
   const visualizerCtx = masterVisualizer.getContext("2d");
@@ -54,7 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!toastNotification) return;
     toastNotification.textContent = message;
     toastNotification.classList.add("show");
-    setTimeout(() => {
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => {
       toastNotification.classList.remove("show");
     }, duration);
   }
@@ -72,12 +83,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetPanel = document.getElementById(targetTabId);
       if (targetPanel) targetPanel.classList.add("active");
 
-      // Si entra en diagnósticos, refrescar datos
-      if (targetTabId === "tab-diagnostics") {
-        updateDiagnosticsUI();
-      }
+      if (targetTabId === "tab-diagnostics") updateDiagnosticsUI();
+      if (targetTabId === "tab-vocal") refreshRecDevices();
+      if (targetTabId === "tab-bases") renderBaseList();
+      if (targetTabId === "tab-trackpad") trackpad._draw();
     });
   });
+
+  // =========================================================================
+  // PALETA DE INSTRUMENTOS (16 VOCES)
+  // =========================================================================
+  const instrumentColorMap = {
+    kick:         "#ff5722",
+    snare:        "#00e5ff",
+    clap:         "#ffd600",
+    hihat_closed: "#e2e8f0",
+    hihat_open:   "#38bdf8",
+    bass808:      "#c084fc",
+    rimshot:      "#f59e0b",
+    crash:        "#ff9c00",
+    ride:         "#ffb703",
+    tom_low:      "#7ee093",
+    tom_mid:      "#5ad6ba",
+    cowbell:      "#f4d03f",
+    snap_trap:    "#ff4d9e",
+    shaker:       "#9be564",
+    stab_dark:    "#b388ff",
+    horn_slap:    "#ffd28a",
+  };
 
   // =========================================================================
   // RENDERIZADO DEL SECUENCIADOR POR PASOS
@@ -85,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderTimeline() {
     stepsTimeline.innerHTML = "";
     const totalSteps = currentProject.stepsCount || 16;
+    stepsTimeline.style.setProperty("--steps-count", String(totalSteps));
     for (let i = 0; i < totalSteps; i++) {
       const marker = document.createElement("div");
       marker.className = "timeline-marker" + (i % 4 === 0 ? " beat-head" : "");
@@ -99,24 +133,14 @@ document.addEventListener("DOMContentLoaded", () => {
     sequencerGrid.innerHTML = "";
     const totalSteps = currentProject.stepsCount || 16;
 
-    const colorMap = {
-      kick: "#ff5722",
-      snare: "#00e5ff",
-      clap: "#ffd600",
-      hihat_closed: "#e2e8f0",
-      hihat_open: "#38bdf8",
-      bass808: "#c084fc",
-      rimshot: "#f59e0b",
-    };
-
     currentProject.tracks.forEach((track, trackIdx) => {
-      const instColor = colorMap[track.id] || "#00f2fe";
+      const instColor = instrumentColorMap[track.id] || "#00f2fe";
       const row = document.createElement("div");
       row.className = "track-row";
       row.id = `track-row-${trackIdx}`;
       row.style.setProperty("--track-accent", instColor);
 
-      // 1. Controles de pista (Color tag, Nombre, Mute, Solo, Volumen)
+      // 1. Controles de pista
       const controls = document.createElement("div");
       controls.className = "track-controls";
 
@@ -128,12 +152,39 @@ document.addEventListener("DOMContentLoaded", () => {
       const nameBtn = document.createElement("button");
       nameBtn.className = "track-name-btn";
       nameBtn.textContent = track.name;
-      nameBtn.title = `Escuchar muestra de ${track.name}`;
+      const sampleName = sampler.getSampleName(track.id);
+      nameBtn.title = sampleName
+        ? `Muestra cargada: ${sampleName}. Clic para escuchar.`
+        : `Escuchar muestra de ${track.name}`;
       nameBtn.addEventListener("click", () => {
         audio.init().then(() => {
           audio.triggerInstrument(track.id, 0, track.volume || 0.85);
         });
       });
+
+      // Botón de muestra local (Sample Studio)
+      const btnSample = document.createElement("button");
+      btnSample.className = "btn-sample" + (sampleName ? " loaded" : "");
+      btnSample.textContent = sampleName ? "🎵" : "📂";
+      btnSample.title = sampleName ? `Muestra: ${sampleName} (clic para sustituir)` : "Cargar muestra local para esta pista";
+      btnSample.addEventListener("click", () => {
+        pendingSampleTrackId = track.id;
+        inputSampleFile.value = "";
+        inputSampleFile.click();
+      });
+
+      let btnClearSample = null;
+      if (sampleName) {
+        btnClearSample = document.createElement("button");
+        btnClearSample.className = "btn-sample-clear";
+        btnClearSample.textContent = "✕";
+        btnClearSample.title = "Quitar muestra y volver a la voz sintética";
+        btnClearSample.addEventListener("click", () => {
+          sampler.clearSample(track.id);
+          renderSequencerGrid();
+          showToast(`Muestra de ${track.name} retirada.`);
+        });
+      }
 
       const btnMute = document.createElement("button");
       btnMute.className = "btn-mute" + (track.muted ? " active" : "");
@@ -166,27 +217,47 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       controls.appendChild(nameBtn);
+      controls.appendChild(btnSample);
+      if (btnClearSample) controls.appendChild(btnClearSample);
       controls.appendChild(btnMute);
       controls.appendChild(btnSolo);
       controls.appendChild(volSlider);
       row.appendChild(controls);
 
-      // 2. Pasos (16 Step buttons)
+      // 2. Pasos (toggle; Shift+Click cicla la velocity del paso activo)
       const stepsContainer = document.createElement("div");
       stepsContainer.className = "track-steps";
+      stepsContainer.style.setProperty("--steps-count", String(totalSteps));
+
+      const velocityCycles = [0.5, 0.85, 1.0];
 
       for (let s = 0; s < totalSteps; s++) {
         const stepBtn = document.createElement("button");
         const isGroupAlt = Math.floor(s / 4) % 2 === 1;
-        stepBtn.className = "step-btn" + (isGroupAlt ? " group-alt" : "") + (track.steps[s] ? " active" : "");
+        const hasVel = track.velocities && track.velocities[s] !== undefined;
+        const isSoft = hasVel && track.velocities[s] <= 0.6 && track.steps[s];
+        const isHard = hasVel && track.velocities[s] >= 0.98 && track.steps[s];
+
+        stepBtn.className = "step-btn"
+          + (isGroupAlt ? " group-alt" : "")
+          + (track.steps[s] ? " active" : "")
+          + (isSoft ? " vel-soft" : "")
+          + (isHard ? " vel-hard" : "");
         stepBtn.id = `step-${trackIdx}-${s}`;
         stepBtn.setAttribute("data-track", trackIdx);
         stepBtn.setAttribute("data-step", s);
-        stepBtn.title = `${track.name} — Paso ${s + 1}`;
+        stepBtn.title = `${track.name} — Paso ${s + 1}` + (isSoft ? " (suave)" : isHard ? "(forte)" : "");
 
-        stepBtn.addEventListener("click", () => {
+        stepBtn.addEventListener("click", (ev) => {
+          if (ev.shiftKey && track.steps[s]) {
+            const cur = track.velocities[s] || 0.85;
+            const idxNext = (velocityCycles.indexOf(cur) + 1) % velocityCycles.length;
+            seq.setStepVelocity(trackIdx, s, velocityCycles[idxNext]);
+            renderSequencerGrid();
+            return;
+          }
           seq.toggleStep(trackIdx, s);
-          stepBtn.classList.toggle("active", track.steps[s]);
+          renderSequencerGrid();
         });
 
         stepsContainer.appendChild(stepBtn);
@@ -202,13 +273,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // CONTROL DE TRANSPORTE Y TIEMPO (BPM, SWING, VOLUME)
+  // SAMPLE STUDIO (muestras locales)
+  // =========================================================================
+  let pendingSampleTrackId = null;
+  const inputSampleFile = document.getElementById("input-sample-file");
+
+  if (inputSampleFile) {
+    inputSampleFile.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      const trackId = pendingSampleTrackId;
+      if (!file || !trackId) return;
+      try {
+        await sampler.loadSample(trackId, file);
+        audio.init().then(() => {
+          audio.triggerInstrument(trackId, 0, 0.9);
+        });
+        showToast(`Muestra cargada en la pista (solo esta sesión): ${file.name}`);
+      } catch (err) {
+        showToast(`Error al cargar muestra: ${err.message}`);
+      } finally {
+        pendingSampleTrackId = null;
+        renderSequencerGrid();
+      }
+    });
+  }
+
+  // =========================================================================
+  // CONTROL DE TRANSPORTE Y TIEMPO (BPM, SWING, VOLUME, PASOS)
   // =========================================================================
   function updateTransportUI() {
     inputBpm.value = currentProject.bpm;
     rangeSwing.value = currentProject.swing || 0.1;
     labelSwingVal.textContent = `${Math.round((currentProject.swing || 0.1) * 100)}%`;
     rangeMasterVol.value = currentProject.masterVolume || 0.85;
+    if (selectStepsCount) selectStepsCount.value = String(currentProject.stepsCount || 16);
   }
 
   btnPlayPause.addEventListener("click", () => {
@@ -221,22 +319,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Atajo de teclado (Barra espaciadora para Play/Stop)
   window.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+    if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA" && e.target.tagName !== "SELECT") {
       e.preventDefault();
       seq.togglePlay();
     }
   });
 
+  // Hook: estado de reproducción (UI + Bases sincronizadas)
   seq.onPlayStateChange = (isPlaying) => {
     if (isPlaying) {
       btnPlayPause.classList.add("playing");
       btnPlayPause.querySelector(".transport-label").textContent = "PAUSE";
       btnPlayPause.querySelector(".transport-icon").textContent = "⏸";
+      // La base activa arranca con el transporte
+      if (baseLib.getActive() && !baseLib.playing) {
+        baseLib.startLive().catch((err) => showToast(err.message));
+      }
     } else {
       btnPlayPause.classList.remove("playing");
       btnPlayPause.querySelector(".transport-label").textContent = "PLAY";
       btnPlayPause.querySelector(".transport-icon").textContent = "▶";
+      baseLib.stopLive();
     }
+  };
+
+  // Hook: BPM cambia → eco del trackpad sincronizado (corchea musical)
+  seq.onBpmChange = (bpm) => {
+    trackpad.syncEchoToBpm(bpm);
   };
 
   // Metrónomo
@@ -248,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Cursor visual de paso y actualización del display digital
+  // Cursor visual de paso y display digital
   let previousCursorStep = -1;
   seq.onStepChange = (activeStep) => {
     if (previousCursorStep >= 0 && previousCursorStep !== activeStep) {
@@ -262,7 +371,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     previousCursorStep = activeStep;
 
-    // Actualizar display digital de tiempo
     if (displayStep) {
       const beatNum = Math.floor(activeStep / 4) + 1;
       const subStep = (activeStep % 4) + 1;
@@ -273,6 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // BPM
   inputBpm.addEventListener("change", (e) => {
     seq.setBpm(e.target.value);
+    updateTransportUI();
   });
 
   btnBpmDown.addEventListener("click", () => {
@@ -299,32 +408,136 @@ document.addEventListener("DOMContentLoaded", () => {
     projMgr.saveCurrentProject(currentProject);
   });
 
-  // Botón Limpiar Patrón
-  document.getElementById("btn-clear-pattern").addEventListener("click", () => {
-    seq.clearPattern();
-    renderSequencerGrid();
-    showToast("Patrón limpiado.");
-  });
-
-  // Botones de Presets Rápidos
-  document.querySelectorAll(".btn-preset-chip[data-preset]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const presetId = btn.getAttribute("data-preset");
-      currentProject = projMgr.loadPresetIntoProject(presetId);
-      seq.setProject(currentProject);
-      updateTransportUI();
+  // Número de pasos (16/32/64)
+  if (selectStepsCount) {
+    selectStepsCount.addEventListener("change", (e) => {
+      seq.setStepsCount(e.target.value);
+      renderTimeline();
       renderSequencerGrid();
-      showToast(`Preset cargado: ${currentProject.name}`);
+      showToast(`Resolución del patrón: ${currentProject.stepsCount} pasos`);
+    });
+  }
+
+  // Botón "Limpiar" lo renderiza renderPresetQuickBar() junto a los kits
+
+  // Presets Rápidos (dibujados desde el Project Manager, 8 kits)
+  function renderPresetQuickBar() {
+    const bar = document.getElementById("preset-quick-bar");
+    if (!bar) return;
+    bar.innerHTML = '<span class="preset-bar-label">Kits:</span>';
+    projMgr.getPresets().forEach((preset) => {
+      const chip = document.createElement("button");
+      chip.className = "btn-preset-chip";
+      chip.dataset.preset = preset.id;
+      chip.textContent = preset.name.split(" (")[0];
+      chip.addEventListener("click", () => {
+        currentProject = projMgr.loadPresetIntoProject(preset.id);
+        seq.setProject(currentProject);
+        trackpad.setProject(currentProject);
+        updateTransportUI();
+        renderSequencerGrid();
+        renderPresetsCatalog();
+        showToast(`Preset cargado: ${currentProject.name}`);
+      });
+      bar.appendChild(chip);
+    });
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "btn-preset-chip btn-danger";
+    clearBtn.id = "btn-clear-pattern";
+    clearBtn.title = "Borrar todos los pasos";
+    clearBtn.textContent = "Limpiar";
+    clearBtn.addEventListener("click", () => {
+      seq.clearPattern();
+      renderSequencerGrid();
+      showToast("Patrón limpiado.");
+    });
+    bar.appendChild(clearBtn);
+  }
+
+  // =========================================================================
+  // FX TRACKPAD
+  // =========================================================================
+  const trackpadCanvas = document.getElementById("trackpad-canvas");
+  const trackpadState = document.getElementById("trackpad-state");
+  const btnLatch = document.getElementById("btn-latch");
+  const btnInExport = document.getElementById("btn-in-export");
+  const btnResetPad = document.getElementById("btn-reset-pad");
+  const selectMapX = document.getElementById("select-map-x");
+  const selectMapY = document.getElementById("select-map-y");
+
+  if (trackpadCanvas) {
+    trackpad.init(trackpadCanvas, projMgr, (state) => {
+      if (trackpadState) trackpadState.textContent = `${state.filter}  •  ${state.y}`;
+    });
+  }
+
+  if (btnLatch) {
+    btnLatch.addEventListener("click", () => {
+      const active = trackpad.toggleLatch();
+      btnLatch.classList.toggle("active", active);
+      showToast(active ? "Modo momentáneo ON (vuelve al neutro al soltar)" : "Modo valor persistente (estilo looper)");
+    });
+  }
+  if (btnInExport) {
+    btnInExport.addEventListener("click", () => {
+      const active = trackpad.toggleInExport();
+      btnInExport.classList.toggle("active", active);
+      showToast(active ? "Los FX del trackpad se hornearán en el WAV" : "Export WAV sin FX del trackpad");
+    });
+  }
+  if (btnResetPad) {
+    btnResetPad.addEventListener("click", () => {
+      trackpad.resetPad();
+      showToast("Estado FX reseteado (neutro).");
+    });
+  }
+  if (selectMapX) {
+    selectMapX.addEventListener("change", (e) => trackpad.setMapX(e.target.value));
+  }
+  if (selectMapY) {
+    selectMapY.addEventListener("change", (e) => trackpad.setMapY(e.target.value));
+  }
+  document.querySelectorAll(".btn-pad-preset").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      trackpad.applyStylePreset(btn.dataset.padpreset);
+      showToast(`FX preset: ${btn.textContent.trim()}`);
     });
   });
 
+  function syncTrackpadUi() {
+    if (currentProject.padFx) {
+      if (btnLatch) btnLatch.classList.toggle("active", currentProject.padFx.latch);
+      if (btnInExport) btnInExport.classList.toggle("active", currentProject.padFx.inExport);
+      if (selectMapX) selectMapX.value = currentProject.padFx.mapX;
+      if (selectMapY) selectMapY.value = currentProject.padFx.mapY;
+    }
+  }
+
   // =========================================================================
-  // EXPORTACIÓN DE AUDIO Y MIDI
+  // EXPORTACIÓN DE AUDIO Y MIDI (con base y FX horneados)
   // =========================================================================
+  function buildPadFxForExport() {
+    const fx = currentProject.padFx;
+    if (!fx || !fx.active) return null;
+    return {
+      filterMode: fx.mapX,
+      filterHz: trackpad._xToHz(fx.x),
+      drive: fx.mapY === "tape" ? fx.y * FoZConstants.PAD_DRIVE_MAX : 0,
+      echoMix: fx.mapY === "echo" ? fx.y * FoZConstants.PAD_ECHO_WET_MAX : 0,
+      echoTime: (60.0 / currentProject.bpm) * FoZConstants.PAD_DELAY_DIVISION,
+    };
+  }
+
   async function handleExportWav() {
     showToast("Renderizando audio WAV PCM 16b en navegador...");
     try {
-      const blob = await audio.exportPatternToWavBlob(currentProject, 2);
+      await audio.init();
+      const bars = Math.max(1, currentProject.stepsCount / 16);
+      const opts = {
+        backing: baseLib.exportParams(),
+        padFx: currentProject.padFx && currentProject.padFx.inExport ? buildPadFxForExport() : null,
+      };
+      const blob = await audio.exportPatternToWavBlob(currentProject, bars, opts);
       const filename = `${currentProject.name.toLowerCase().replace(/[^a-z0-9_-]/g, "_")}_${currentProject.bpm}bpm.wav`;
 
       const url = URL.createObjectURL(blob);
@@ -344,7 +557,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleExportMidi() {
     try {
-      const blob = midi.createMidiBlob(currentProject, 2);
+      const bars = Math.max(1, currentProject.stepsCount / 16);
+      const blob = midi.createMidiBlob(currentProject, bars);
       const filename = `${currentProject.name.toLowerCase().replace(/[^a-z0-9_-]/g, "_")}_${currentProject.bpm}bpm.mid`;
       midi.downloadMidi(blob, filename);
       showToast(`¡MIDI SMF1 exportado con éxito! (${blob.size} bytes)`);
@@ -377,8 +591,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     visualizerCtx.fillStyle = "#090c12";
     visualizerCtx.fillRect(0, 0, masterVisualizer.width, masterVisualizer.height);
-
-    // Línea base de reposo sutil
     visualizerCtx.fillStyle = "#161b26";
     visualizerCtx.fillRect(0, masterVisualizer.height - 1, masterVisualizer.width, 1);
 
@@ -386,32 +598,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const barWidth = masterVisualizer.width / barCount;
     let hasSignal = false;
 
-    // Verificar si hay señal audible real (umbral de corte para ruido digital residual)
     for (let i = 0; i < barCount; i++) {
       const idx = Math.floor(i * (bufferLength / 32));
-      if (dataArray[idx] > 4) {
-        hasSignal = true;
-        break;
-      }
+      if (dataArray[idx] > 4) { hasSignal = true; break; }
     }
-
-    if (!hasSignal) {
-      return; // Permanece en reposo limpio cuando no hay audio activo
-    }
+    if (!hasSignal) return;
 
     let x = 0;
     for (let i = 0; i < barCount; i++) {
       const dataIdx = Math.floor(i * (bufferLength / 32));
       const val = dataArray[dataIdx] || 0;
-      
-      // Aplicar umbral de corte estricto
       if (val > 4) {
         const barHeight = Math.max(2, (val / 255) * (masterVisualizer.height - 3));
         const grad = visualizerCtx.createLinearGradient(0, masterVisualizer.height, 0, 0);
         grad.addColorStop(0, "#00f2fe");
         grad.addColorStop(0.7, "#a855f7");
         grad.addColorStop(1, "#fe007a");
-
         visualizerCtx.fillStyle = grad;
         visualizerCtx.fillRect(x + 1, masterVisualizer.height - barHeight, barWidth - 2, barHeight);
       }
@@ -421,115 +623,490 @@ document.addEventListener("DOMContentLoaded", () => {
   drawMasterVisualizer();
 
   // =========================================================================
-  // GRABADOR DE VOZ (VOCAL STUDIO)
+  // RECORD STUDIO (GRABACIÓN CON CADENA PRO + TOMAS WAV)
   // =========================================================================
-  const btnMicRecord = document.getElementById("btn-mic-record");
-  const btnMicStop = document.getElementById("btn-mic-stop");
-  const btnRecordText = document.getElementById("btn-record-text");
-  const recordingTimer = document.getElementById("recording-timer");
-  const vocalCanvas = document.getElementById("vocal-canvas");
-  const vocalCtx = vocalCanvas.getContext("2d");
-  const vocalTakeCard = document.getElementById("vocal-take-card");
-  const audioPlayback = document.getElementById("audio-playback");
-  const takeSizeInfo = document.getElementById("take-size-info");
-  const btnDownloadRec = document.getElementById("btn-download-recording");
-  const btnDiscardRec = document.getElementById("btn-discard-recording");
+  const btnRecordStart = document.getElementById("btn-record-start");
+  const btnRecordStop = document.getElementById("btn-record-stop");
+  const recModeSelect = document.getElementById("rec-mode");
+  const recPrerollSelect = document.getElementById("rec-preroll");
+  const recCountdown = document.getElementById("rec-countdown");
+  const recMonitorToggle = document.getElementById("rec-monitor-toggle");
+  const recDeviceSelect = document.getElementById("rec-device");
+  const recGateToggle = document.getElementById("rec-gate-toggle");
+  const recOffsetSlider = document.getElementById("rec-offset");
+  const recOffsetLabel = document.getElementById("rec-offset-label");
+  const micCanvas = document.getElementById("mic-canvas");
+  const micCtx = micCanvas ? micCanvas.getContext("2d") : null;
+  const recMeterBar = document.getElementById("rec-meter-fill");
+  const takesContainer = document.getElementById("takes-container");
 
-  let recStartTime = 0;
-  let recTimerInterval = null;
+  const vendorCheck = document.getElementById("btn-open-mic");
+  const slMicGain = document.getElementById("rec-gain");
+  const micList = document.getElementById("mic-list");
 
-  btnMicRecord.addEventListener("click", async () => {
+  function applyRecSettingsToUI() {
+    const s = recStudio.settings;
+    if (recMonitorToggle) recMonitorToggle.classList.toggle("active", s.monitorMode === "on");
+    if (recGateToggle) recGateToggle.classList.toggle("active", !!s.gateEnabled);
+    if (recOffsetSlider) {
+      recOffsetSlider.value = s.offsetMs || 0;
+      recOffsetLabel.textContent = `${(s.offsetMs || 0)} ms`;
+    }
+  }
+
+  async function refreshRecDevices() {
+    if (!recDeviceSelect) return;
     try {
-      await audio.startVoiceRecording();
-      btnMicRecord.classList.add("recording");
-      btnRecordText.textContent = "GRABANDO...";
-      btnMicRecord.disabled = true;
-      btnMicStop.disabled = false;
-
-      recStartTime = Date.now();
-      recTimerInterval = setInterval(() => {
-        const elapsed = (Date.now() - recStartTime) / 1000;
-        const mins = Math.floor(elapsed / 60).toString().padStart(2, "0");
-        const secs = (elapsed % 60).toFixed(1).padStart(4, "0");
-        recordingTimer.textContent = `${mins}:${secs}`;
-      }, 100);
-
-      drawVocalWaveform();
-      showToast("Micrófono activo. Grabando toma...");
-    } catch (err) {
-      showToast(`Error al iniciar micrófono: ${err.message}`);
+      const devices = await recStudio.listDevices();
+      recDeviceSelect.innerHTML = "";
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = "Dispositivo por defecto del sistema";
+      recDeviceSelect.appendChild(defaultOpt);
+      devices.forEach((d) => {
+        const opt = document.createElement("option");
+        opt.value = d.deviceId;
+        opt.textContent = d.label;
+        recDeviceSelect.appendChild(opt);
+      });
+      if (recStudio.settings.deviceId) recDeviceSelect.value = recStudio.settings.deviceId;
+    } catch (e) {
+      // Sin permiso aún: la lista se rellena tras activar el micro
     }
+  }
+
+  if (vendorCheck) {
+    vendorCheck.addEventListener("click", async () => {
+      try {
+        recStudio.settings.deviceId = recDeviceSelect ? recDeviceSelect.value : "";
+        await recStudio.openMic();
+        applyRecSettingsToUI();
+        await refreshRecDevices();
+        showToast("Micrófono activo con cadena de voz lista.");
+      } catch (err) {
+        showToast(`Error al abrir micrófono: ${err.message}`);
+      }
+    });
+  }
+
+  if (recDeviceSelect) {
+    recDeviceSelect.addEventListener("change", async (e) => {
+      recStudio.settings.deviceId = e.target.value;
+      recStudio.saveSettings();
+      if (recStudio.micStream) {
+        try { await recStudio.openMic(); refreshRecDevices(); } catch (err) { showToast(err.message); }
+      }
+    });
+  }
+
+  if (recMonitorToggle) {
+    recMonitorToggle.addEventListener("click", () => {
+      const next = recStudio.settings.monitorMode === "on" ? "off" : "on";
+      recStudio.setMonitorMode(next);
+      recMonitorToggle.classList.toggle("active", next === "on");
+      if (next === "on") showToast("Monitor ON — usa auriculares para evitar acople.");
+    });
+  }
+  if (recGateToggle) {
+    recGateToggle.addEventListener("click", () => {
+      recStudio.settings.gateEnabled = !recStudio.settings.gateEnabled;
+      recStudio.saveSettings();
+      applyRecSettingsToUI();
+      showToast(recStudio.settings.gateEnabled ? "Noise gate offline activo en las tomas" : "Noise gate desactivado");
+    });
+  }
+  if (recOffsetSlider) {
+    recOffsetSlider.addEventListener("input", (e) => {
+      recStudio.settings.offsetMs = parseInt(e.target.value, 10) || 0;
+      recStudio.saveSettings();
+      recOffsetLabel.textContent = `${recStudio.settings.offsetMs} ms`;
+    });
+  }
+  if (slMicGain) {
+    slMicGain.addEventListener("input", (e) => {
+      recStudio.setMicGain(parseFloat(e.target.value));
+    });
+    slMicGain.value = recStudio.settings.gain;
+  }
+  document.getElementById("rec-hpf")?.addEventListener("change", (e) => {
+    const hz = parseInt(e.target.value, 10);
+    recStudio.setHpf(isNaN(hz) ? 0 : hz);
+  });
+  ["rec-eq-low", "rec-eq-mid", "rec-eq-high"].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", (e) => {
+      const v = parseFloat(e.target.value) || 0;
+      recStudio.setEq(
+        i === 0 ? v : recStudio.settings.eqLow,
+        i === 1 ? v : recStudio.settings.eqMid,
+        i === 2 ? v : recStudio.settings.eqHigh
+      );
+    });
+    el.value = [recStudio.settings.eqLow, recStudio.settings.eqMid, recStudio.settings.eqHigh][i];
+  });
+  document.getElementById("rec-comp")?.addEventListener("change", (e) => {
+    recStudio.setCompPreset(e.target.value);
+  });
+  document.getElementById("rec-reverb")?.addEventListener("input", (e) => {
+    recStudio.setReverbSend(parseFloat(e.target.value) || 0);
+  });
+  document.getElementById("rec-echo")?.addEventListener("input", (e) => {
+    recStudio.setEchoSend(parseFloat(e.target.value) || 0);
   });
 
-  btnMicStop.addEventListener("click", async () => {
-    clearInterval(recTimerInterval);
-    btnMicRecord.classList.remove("recording");
-    btnRecordText.textContent = "GRABAR TOMA";
-    btnMicRecord.disabled = false;
-    btnMicStop.disabled = true;
+  // --- Flujo de grabación ---------------------------------------------------
+  let isRecordingActive = false;
 
-    const recordedBlob = await audio.stopVoiceRecording();
-    if (recordedBlob && recordedBlob.size > 0) {
-      vocalTakeCard.style.display = "flex";
-      audioPlayback.src = URL.createObjectURL(recordedBlob);
-      takeSizeInfo.textContent = `${(recordedBlob.size / 1024).toFixed(1)} KB`;
-      showToast("Toma grabada correctamente.");
-    }
-  });
+  if (btnRecordStart) {
+    btnRecordStart.addEventListener("click", async () => {
+      if (isRecordingActive) return;
+      const mode = recModeSelect ? recModeSelect.value : "voz+beat";
+      const preroll = parseInt(recPrerollSelect ? recPrerollSelect.value : "1", 10);
 
-  btnDownloadRec.addEventListener("click", () => {
-    if (!audio.recordedAudioBlob) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(audio.recordedAudioBlob);
-    a.download = `foz_vocal_take_${Date.now()}.webm`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  });
+      isRecordingActive = true;
+      btnRecordStart.disabled = true;
+      btnRecordStart.classList.add("recording");
+      btnRecordStop.disabled = false;
+      if (recCountdown) recCountdown.textContent = "PREPARANDO...";
 
-  btnDiscardRec.addEventListener("click", () => {
-    audio.recordedAudioBlob = null;
-    vocalTakeCard.style.display = "none";
-    recordingTimer.textContent = "00:00.0";
-    showToast("Toma descartada.");
-  });
+      recStudio.onCountdown = (bar, beat) => {
+        if (recCountdown) {
+          recCountdown.textContent = `CUENTA: COMPÁS ${bar + 1} / PULSO ${beat + 1}`;
+        }
+      };
+      recStudio.onStopRequestedByUser = () => btnRecordStop.click();
 
-  function drawVocalWaveform() {
-    if (!audio.isRecording) {
-      vocalCtx.fillStyle = "#090c12";
-      vocalCtx.fillRect(0, 0, vocalCanvas.width, vocalCanvas.height);
+      try {
+        await recStudio.start({
+          includeMic: mode !== "beat",
+          includeBeat: mode !== "voz",
+          prerollBars: preroll,
+          bpm: currentProject.bpm,
+          onStartBeat: () => {
+            if (!seq.isPlaying) seq.start();
+          },
+        });
+        // Espera activa hasta goTime (feedback visual y auto-start elegido)
+        const goAwait = recStudio.rec ? recStudio.rec.goTime : 0;
+        const waitMs = Math.max(0, (goAwait - audio.ctx.currentTime) * 1000);
+        setTimeout(() => {
+          if (recCountdown && isRecordingActive) recCountdown.textContent = "GRABANDO...";
+        }, waitMs);
+        drawMicWaveform();
+        showToast(mode === "voz" ? "Grabación de voz iniciada." : "Grabación con beat programada.");
+      } catch (err) {
+        isRecordingActive = false;
+        btnRecordStart.disabled = false;
+        btnRecordStart.classList.remove("recording");
+        btnRecordStop.disabled = true;
+        if (recCountdown) recCountdown.textContent = "";
+        showToast(`Error al iniciar grabación: ${err.message}`);
+      }
+    });
+  }
+
+  if (btnRecordStop) {
+    btnRecordStop.addEventListener("click", async () => {
+      if (!isRecordingActive) return;
+      btnRecordStop.disabled = true;
+      isRecordingActive = false;
+      seq.stop();
+      baseLib.stopLive();
+
+      if (recCountdown) recCountdown.textContent = "PROCESANDO...";
+      try {
+        const take = await recStudio.stop();
+        if (take) {
+          showToast(`Toma guardada (${(take.durationSec).toFixed(1)} s, ${(take.size / 1024).toFixed(0)} KB)`);
+          await renderTakesList();
+        }
+      } catch (err) {
+        showToast(`Error al cerrar la toma: ${err.message}`);
+      } finally {
+        btnRecordStart.disabled = false;
+        btnRecordStart.classList.remove("recording");
+        if (recCountdown) recCountdown.textContent = "";
+      }
+    });
+  }
+
+  // --- VU meter + osciloscopio del micro ------------------------------------
+  function drawMicWaveform() {
+    if (!micCtx) return;
+    requestAnimationFrame(drawMicWaveform);
+    if (!recStudio.micAnalyser || !isRecordingActive) {
+      micCtx.fillStyle = "#090c12";
+      micCtx.fillRect(0, 0, micCanvas.width, micCanvas.height);
+      if (recMeterBar) recMeterBar.style.width = "0%";
       return;
     }
 
-    requestAnimationFrame(drawVocalWaveform);
-    const bufferLength = audio.micAnalyser ? audio.micAnalyser.frequencyBinCount : 0;
-    if (!bufferLength) return;
-
+    const analyser = recStudio.micAnalyser;
+    const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-    audio.micAnalyser.getByteTimeDomainData(dataArray);
+    analyser.getByteTimeDomainData(dataArray);
 
-    vocalCtx.fillStyle = "#090c12";
-    vocalCtx.fillRect(0, 0, vocalCanvas.width, vocalCanvas.height);
-
-    vocalCtx.lineWidth = 2;
-    vocalCtx.strokeStyle = "#ff1744";
-    vocalCtx.beginPath();
-
-    const sliceWidth = vocalCanvas.width / bufferLength;
-    let x = 0;
-
+    // VU (RMS)
+    let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
-      const v = dataArray[i] / 128.0;
-      const y = (v * vocalCanvas.height) / 2;
-      if (i === 0) vocalCtx.moveTo(x, y);
-      else vocalCtx.lineTo(x, y);
+      const v = (dataArray[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / bufferLength);
+    if (recMeterBar) {
+      const pct = Math.min(100, Math.max(0, rms * 260));
+      recMeterBar.style.width = pct + "%";
+      recMeterBar.style.background = pct > 92 ? "#ff1744" : "#00f2fe";
+    }
+
+    // Osciloscopio
+    micCtx.fillStyle = "#090c12";
+    micCtx.fillRect(0, 0, micCanvas.width, micCanvas.height);
+    micCtx.lineWidth = 2;
+    micCtx.strokeStyle = isRecordingActive ? "#ff1744" : "#00f2fe";
+    micCtx.beginPath();
+    const sliceWidth = micCanvas.width / bufferLength;
+    let x = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      const v = (dataArray[i] - 128) / 128;
+      const y = micCanvas.height / 2 + v * micCanvas.height * 0.45;
+      if (i === 0) micCtx.moveTo(x, y); else micCtx.lineTo(x, y);
       x += sliceWidth;
     }
-    vocalCtx.stroke();
+    micCtx.stroke();
+  }
+
+  // --- Lista de tomas -------------------------------------------------------
+  async function renderTakesList() {
+    if (!takesContainer) return;
+    takesContainer.innerHTML = "";
+    try {
+      const takes = await recStudio.listTakes();
+      if (!takes.length) {
+        const empty = document.createElement("div");
+        empty.className = "takes-empty";
+        empty.textContent = "Sin tomas aún. Activa el micro y graba tu primera toma con el beat.";
+        takesContainer.appendChild(empty);
+        return;
+      }
+      takes.forEach((take) => {
+        const card = document.createElement("div");
+        card.className = "take-card-v2";
+
+        const info = document.createElement("div");
+        info.className = "take-info";
+        const title = document.createElement("div");
+        title.className = "take-name";
+        title.textContent = `${take.name}`;
+        const meta = document.createElement("div");
+        meta.className = "take-meta";
+        meta.textContent =
+          `${take.mode} • ${take.durationSec ? take.durationSec.toFixed(1) : "?"} s • ${(take.size / 1024).toFixed(0)} KB` +
+          (take.clipped ? " • ⚠️ CLIPPING" : "") +
+          (take.offsetMs ? ` • offset ${take.offsetMs} ms` : "");
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        const player = document.createElement("audio");
+        player.controls = true;
+        player.className = "take-player";
+        const url = URL.createObjectURL(new Blob([take.blob], { type: "audio/wav" }));
+        player.src = url;
+
+        const actions = document.createElement("div");
+        actions.className = "take-actions-v2";
+
+        const btnDl = document.createElement("button");
+        btnDl.className = "btn-action btn-accent-blue";
+        btnDl.textContent = "⬇ WAV";
+        btnDl.addEventListener("click", () => recStudio.downloadTake(take));
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn-action btn-danger";
+        btnDel.textContent = "🗑";
+        btnDel.addEventListener("click", async () => {
+          if (confirm(`¿Eliminar la toma ${take.name}?`)) {
+            await recStudio.deleteTake(take.id);
+            URL.revokeObjectURL(url);
+            renderTakesList();
+          }
+        });
+
+        actions.appendChild(btnDl);
+        actions.appendChild(btnDel);
+
+        card.appendChild(info);
+        card.appendChild(player);
+        card.appendChild(actions);
+        takesContainer.appendChild(card);
+      });
+    } catch (err) {
+      console.warn("No se pudieron listar las tomas:", err);
+    }
+  }
+  applyRecSettingsToUI();
+  renderTakesList();
+
+  // =========================================================================
+  // BASE LIBRARY (BASES IMPORTADAS)
+  // =========================================================================
+  const inputBaseFiles = document.getElementById("input-base-files");
+  const btnImportBase = document.getElementById("btn-import-base");
+  const btnImportM3U = document.getElementById("btn-import-m3u");
+  const inputBaseM3U = document.getElementById("input-base-m3u");
+  const baseListEl = document.getElementById("base-list");
+  const baseCatalogInfo = document.getElementById("base-catalog-info");
+  const baseGain = document.getElementById("base-gain");
+  const baseFadeIn = document.getElementById("base-fade-in");
+  const baseFadeOut = document.getElementById("base-fade-out");
+  const baseLoop = document.getElementById("base-loop");
+  const btnBasePreview = document.getElementById("btn-base-preview");
+
+  if (btnImportBase) btnImportBase.addEventListener("click", () => inputBaseFiles.click());
+  if (btnImportM3U) btnImportM3U.addEventListener("click", () => inputBaseM3U.click());
+
+  if (inputBaseFiles) {
+    inputBaseFiles.addEventListener("change", async (e) => {
+      const files = e.target.files;
+      if (!files || !files.length) return;
+      showToast("Decodificando bases...");
+      try {
+        const res = await baseLib.importFiles(files);
+        const ok = res.imported.length;
+        const fail = res.failed.length;
+        if (fail) showToast(`${ok} base(s) cargadas, ${fail} fallidas (formato no soportado)`);
+        else showToast(`${ok} base(s) cargadas en la biblioteca.`);
+        renderBaseList();
+      } catch (err) {
+        showToast(`Error al importar: ${err.message}`);
+      } finally {
+        inputBaseFiles.value = "";
+      }
+    });
+  }
+
+  if (inputBaseM3U) {
+    inputBaseM3U.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const count = await baseLib.importM3UFile(file);
+        showToast(`Manifiesto ${file.name}: ${count} entradas (${baseLib.matchedCount} enlazadas).`);
+        renderBaseList();
+      } catch (err) {
+        showToast(`Error en .m3u: ${err.message}`);
+      } finally {
+        inputBaseM3U.value = "";
+      }
+    });
+  }
+
+  function renderBaseList() {
+    if (!baseListEl) return;
+    baseListEl.innerHTML = "";
+
+    if (baseCatalogInfo) {
+      baseCatalogInfo.textContent = baseLib.catalog.length
+        ? `Catálogo "${baseLib.catalogName}": ${baseLib.catalog.length} entradas • ${baseLib.matchedCount} enlazadas`
+        : "Importa un .m3u/.m3u8 (con #EXTM3U) como catálogo, o directamente tus MP3/WAV.";
+    }
+
+    if (!baseLib.bases.length) {
+      const empty = document.createElement("div");
+      empty.className = "base-empty";
+      empty.textContent = "Sin bases importadas. Añade MP3/M4A/WAV/Ogg/FLAC locales.";
+      baseListEl.appendChild(empty);
+      return;
+    }
+
+    baseLib.bases.forEach((base) => {
+      const item = document.createElement("div");
+      item.className = "base-item" + (baseLib.activeId === base.id ? " active" : "");
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "base-active";
+      radio.checked = baseLib.activeId === base.id;
+      radio.addEventListener("change", () => {
+        baseLib.setActive(base.id);
+        renderBaseList();
+        if (baseLib.playing) baseLib.stopLive();
+      });
+
+      const label = document.createElement("span");
+      label.className = "base-name";
+      label.textContent = base.name;
+      label.title = base.name;
+
+      const dur = document.createElement("span");
+      dur.className = "base-dur";
+      dur.textContent = `${base.duration.toFixed(1)} s`;
+
+      const btnRemove = document.createElement("button");
+      btnRemove.className = "btn-base-remove";
+      btnRemove.textContent = "🗑";
+      btnRemove.title = "Quitar de la biblioteca";
+      btnRemove.addEventListener("click", () => {
+        baseLib.remove(base.id);
+        renderBaseList();
+      });
+
+      item.appendChild(radio);
+      item.appendChild(label);
+      item.appendChild(dur);
+      item.appendChild(btnRemove);
+      baseListEl.appendChild(item);
+    });
+  }
+
+  if (baseGain) {
+    baseGain.addEventListener("input", (e) => {
+      baseLib.settings.gain = parseFloat(e.target.value);
+      if (baseLib.playing) {
+        baseLib.playing.gain.gain.setTargetAtTime(baseLib.settings.gain, audio.ctx.currentTime, 0.02);
+      }
+    });
+    baseGain.value = baseLib.settings.gain;
+  }
+  if (baseFadeIn) {
+    baseFadeIn.addEventListener("input", (e) => { baseLib.settings.fadeInSec = parseFloat(e.target.value) || 0; });
+    baseFadeIn.value = baseLib.settings.fadeInSec;
+  }
+  if (baseFadeOut) {
+    baseFadeOut.addEventListener("input", (e) => { baseLib.settings.fadeOutSec = parseFloat(e.target.value) || 0; });
+    baseFadeOut.value = baseLib.settings.fadeOutSec;
+  }
+  if (baseLoop) {
+    baseLoop.checked = baseLib.settings.loop;
+    baseLoop.addEventListener("change", (e) => {
+      baseLib.settings.loop = e.target.checked;
+      if (baseLib.playing) baseLib.playing.source.loop = e.target.checked;
+    });
+  }
+  if (btnBasePreview) {
+    btnBasePreview.addEventListener("click", async () => {
+      if (baseLib.playing) {
+        baseLib.stopLive();
+        btnBasePreview.textContent = "▶ Escuchar";
+      } else {
+        const ok = await baseLib.startLive();
+        if (ok) {
+          btnBasePreview.textContent = "⏹ Stop";
+          setTimeout(() => { if (!baseLib.playing) btnBasePreview.textContent = "▶ Escuchar"; }, 100);
+          const poll = setInterval(() => {
+            if (!baseLib.playing) {
+              clearInterval(poll);
+              btnBasePreview.textContent = "▶ Escuchar";
+            }
+          }, 400);
+        }
+      }
+    });
   }
 
   // =========================================================================
-  // ASISTENTE MUSICAL CON IA LOCAL (TAB 3)
+  // ASISTENTE MUSICAL CON IA LOCAL (TAB IA)
   // =========================================================================
   const btnGenerateAi = document.getElementById("btn-generate-ai");
   const aiPromptInput = document.getElementById("ai-prompt-input");
@@ -549,14 +1126,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebarAiIndicator = document.getElementById("sidebar-ai-indicator");
   const badgeAiStatus = document.getElementById("badge-ai-status");
 
-  // Chips de sugerencia rápida
   document.querySelectorAll(".btn-prompt-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       aiPromptInput.value = chip.getAttribute("data-prompt");
     });
   });
 
-  // Comprobar estado del bridge al inicio
   async function refreshBridgeStatus() {
     const status = await ai.checkConnection();
     if (status.connected) {
@@ -585,6 +1160,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const patternData = await ai.generatePattern(prompt, genre, currentBpm);
+      if (!patternData.suggestedBpm) patternData.suggestedBpm = currentBpm;
 
       aiEmptyState.style.display = "none";
       aiResultContent.style.display = "block";
@@ -594,25 +1170,20 @@ document.addEventListener("DOMContentLoaded", () => {
       aiResultSource.textContent = patternData.source || "Ollama Local";
       aiResultExplanation.textContent = patternData.explanation || "Patrón generado con éxito.";
 
-      // Renderizar mini previsualización
       aiMiniGrid.innerHTML = "";
       Object.keys(patternData.tracks).forEach((instId) => {
         const row = document.createElement("div");
         row.className = "mini-grid-row";
-
         const label = document.createElement("span");
         label.className = "mini-row-label";
         label.textContent = instId;
-
         const stepsBox = document.createElement("div");
         stepsBox.className = "mini-steps-box";
-
         patternData.tracks[instId].forEach((active) => {
           const dot = document.createElement("div");
           dot.className = "mini-step-dot" + (active ? " active" : "");
           stepsBox.appendChild(dot);
         });
-
         row.appendChild(label);
         row.appendChild(stepsBox);
         aiMiniGrid.appendChild(row);
@@ -634,8 +1205,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTransportUI();
     renderSequencerGrid();
     showToast("Patrón de IA aplicado al secuenciador.");
-
-    // Volver a la pestaña del secuenciador
     document.getElementById("nav-btn-sequencer").click();
   });
 
@@ -649,7 +1218,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // =========================================================================
-  // GESTIÓN DE PROYECTOS (TAB 4)
+  // GESTIÓN DE PROYECTOS (TAB PROYECTOS)
   // =========================================================================
   const projectNameInput = document.getElementById("project-name-input");
   const btnSaveProject = document.getElementById("btn-save-project-local");
@@ -666,6 +1235,16 @@ document.addEventListener("DOMContentLoaded", () => {
     projMgr.saveCurrentProject(currentProject);
   });
 
+  function refreshProjectUI() {
+    projectNameInput.value = currentProject.name;
+    updateTransportUI();
+    renderSequencerGrid();
+    renderTimeline();
+    renderPresetsCatalog();
+    syncTrackpadUi();
+    if (footerProjectName) footerProjectName.textContent = `Proyecto: ${currentProject.name}`;
+  }
+
   btnSaveProject.addEventListener("click", () => {
     projMgr.saveCurrentProject(currentProject);
     showToast("Proyecto guardado en el navegador.");
@@ -676,24 +1255,22 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Descargando archivo .foz del proyecto...");
   });
 
-  btnTriggerImport.addEventListener("click", () => {
-    inputImportFile.click();
-  });
+  btnTriggerImport.addEventListener("click", () => inputImportFile.click());
 
   inputImportFile.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
       const imported = await projMgr.importProjectFile(file);
       currentProject = imported;
       seq.setProject(currentProject);
-      projectNameInput.value = currentProject.name;
-      updateTransportUI();
-      renderSequencerGrid();
+      trackpad.setProject(currentProject);
+      refreshProjectUI();
       showToast(`Proyecto '${currentProject.name}' importado con éxito.`);
     } catch (err) {
       showToast(`Error al importar: ${err.message}`);
+    } finally {
+      inputImportFile.value = "";
     }
   });
 
@@ -701,14 +1278,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("¿Crear un proyecto nuevo en blanco? Se descartarán los pasos no guardados.")) {
       currentProject = projMgr.createNewProject("Nuevo Beat FoZ", 90);
       seq.setProject(currentProject);
-      projectNameInput.value = currentProject.name;
-      updateTransportUI();
-      renderSequencerGrid();
+      trackpad.setProject(currentProject);
+      refreshProjectUI();
       showToast("Nuevo proyecto en blanco creado.");
     }
   });
 
-  // Renderizar catálogo de presets
   function renderPresetsCatalog() {
     presetsCatalogContainer.innerHTML = "";
     projMgr.getPresets().forEach((preset) => {
@@ -733,9 +1308,8 @@ document.addEventListener("DOMContentLoaded", () => {
       btnLoad.addEventListener("click", () => {
         currentProject = projMgr.loadPresetIntoProject(preset.id);
         seq.setProject(currentProject);
-        projectNameInput.value = currentProject.name;
-        updateTransportUI();
-        renderSequencerGrid();
+        trackpad.setProject(currentProject);
+        refreshProjectUI();
         showToast(`Preset cargado: ${preset.name}`);
         document.getElementById("nav-btn-sequencer").click();
       });
@@ -748,7 +1322,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderPresetsCatalog();
 
   // =========================================================================
-  // DIAGNÓSTICO Y CONFIGURACIÓN (TAB 5)
+  // DIAGNÓSTICO Y CONFIGURACIÓN (TAB DIAGNÓSTICO)
   // =========================================================================
   const diagAudioState = document.getElementById("diag-audio-state");
   const diagAudioSampleRate = document.getElementById("diag-audio-samplerate");
@@ -762,7 +1336,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (audio.ctx) {
       diagAudioState.textContent = audio.ctx.state;
       diagAudioSampleRate.textContent = `${audio.ctx.sampleRate} Hz`;
-      diagAudioLatency.textContent = audio.ctx.baseLatency ? `${(audio.ctx.baseLatency * 1000).toFixed(1)} ms` : "Estándar";
+      diagAudioLatency.textContent = audio.ctx.baseLatency
+        ? `${(audio.ctx.baseLatency * 1000).toFixed(1)} ms`
+        : "Estándar";
     }
 
     ai.checkConnection().then((st) => {
@@ -788,8 +1364,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // INICIALIZACIÓN COMPLETA
   // =========================================================================
   renderTimeline();
+  renderPresetQuickBar();
   updateTransportUI();
   renderSequencerGrid();
+  syncTrackpadUi();
+  renderBaseList();
+  refreshProjectUI();
 
-  console.log("FoZ SoundPro — Beatmaker AI Studio inicializado correctamente.");
+  window.addEventListener("beforeunload", () => {
+    projMgr.saveCurrentProject(currentProject);
+  });
+
+  console.log("FoZ SoundPro v1.1 — Beatmaker AI Studio inicializado correctamente (16 voces, Trackpad FX, Record Studio, Base Library).");
 });
