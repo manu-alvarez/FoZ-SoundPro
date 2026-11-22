@@ -5,8 +5,6 @@ Diseñada con coste 0 €, funciona en **Windows, macOS y Linux** (optimizada pa
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Studio-00f2fe?logo=github)](https://manu-alvarez.github.io/FoZ-SoundPro/)
 [![Repository](https://img.shields.io/badge/GitHub-manu--alvarez%2FFoZ--SoundPro-blue?logo=github)](https://github.com/manu-alvarez/FoZ-SoundPro)
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
-[![Status: Production](https://img.shields.io/badge/Status-Production%20Ready-success.svg)]()
 
 🌐 **Acceso Web en Vivo (GitHub Pages):** [https://manu-alvarez.github.io/FoZ-SoundPro/](https://manu-alvarez.github.io/FoZ-SoundPro/)
 
@@ -32,7 +30,7 @@ start_windows.bat
 
 ### En Linux:
 ```bash
-sh start_linux.sh
+bash start_linux.sh
 ```
 
 ---
@@ -92,18 +90,14 @@ sh start_linux.sh
 
 Para trasladar la estación a otro equipo Windows sin instalar herramientas de compilación ni entornos pesados:
 
-1. El archivo empaquetado y verificado se encuentra en:
-   [`dist/FoZ_SoundPro_Portable_v1.2.zip`](dist/FoZ_SoundPro_Portable_v1.2.zip).
-2. Suma criptográfica de integridad:
-   [`dist/FoZ_SoundPro_Portable_v1.2.zip.sha256`](dist/FoZ_SoundPro_Portable_v1.2.zip.sha256).
-3. Guía completa de uso en Windows: ver [docs/PAQUETE_WINDOWS.md](docs/PAQUETE_WINDOWS.md).
+Desde la raíz del repositorio, ejecuta `python3 scripts/automation/build_portable_zip.py`. El script genera el ZIP v1.2 y su suma SHA-256 en `dist/`. Consulta la [guía de Windows](docs/PAQUETE_WINDOWS.md) para trasladarlo al equipo de destino.
 
 ---
 
 ## 4. Despliegue en GitHub Pages
 
 La carpeta [`web/`](web/) es completamente autónoma (HTML, CSS, JS, manifest y service worker PWA):
-- Publicable directamente desde GitHub: *Settings $\rightarrow$ Pages $\rightarrow$ Branch: main /web*.
+- El [workflow de Pages](.github/workflows/deploy.yml) publica el contenido de `web/` al recibir cambios en `main`.
 - Guía detallada de publicación y consideraciones de seguridad: ver [docs/DESPLIEGUE_GITHUB_PAGES.md](docs/DESPLIEGUE_GITHUB_PAGES.md).
 
 ---
@@ -116,7 +110,7 @@ Para ejecutar las 6 fases de validación técnica automatizada:
 ./scripts/diagnostics/run-checks.sh
 ```
 
-**Fases verificadas:**
+**Comprobaciones incluidas:**
 1. Auditoría del entorno y dependencias (`scripts/diagnostics/doctor.sh`).
 2. Generación y comprobación binaria de audio WAV PCM (`scripts/audio/generate_test_wav.py`).
 3. Generación y parsing binario de MIDI SMF1 en canal GM 10 (`scripts/midi/generate_demo_midi.py`).
