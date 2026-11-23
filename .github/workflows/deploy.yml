@@ -32,6 +32,10 @@ jobs:
         with:
           path: 'web'
 
+      - name: Wait for Pages artifact metadata propagation
+        run: |
+          set -euo pipefail
+          sleep 12
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
