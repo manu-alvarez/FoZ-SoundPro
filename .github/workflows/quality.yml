@@ -1,0 +1,36 @@
+name: FoZ SoundPro acceptance
+
+on:
+  push:
+    branches: [ci/verify-audio-midi-portable-20261123]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  audio-midi-pwa-portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run six independent acceptance checks
+        run: bash scripts/diagnostics/run-checks.sh
+      - name: Verify portable archive payload
+        run: |
+          python - <<'PY'
+          import hashlib, pathlib, zipfile
+          p = pathlib.Path('dist/FoZ_SoundPro_Portable_v1.2.zip')
+          digest = pathlib.Path(str(p) + '.sha256').read_text().split()[0]
+          assert hashlib.sha256(p.read_bytes()).hexdigest() == digest
+          with zipfile.ZipFile(p) as z:
+              assert z.testzip() is None
+              members = set(z.namelist())
+              for required in ('web/index.html', 'web/js/midi-engine.js', 'web/js/audio-engine.js', 'start_windows.bat'):
+                  assert required in members, required
+          print('Portable archive SHA-256 and required files OK')
+          PY
